@@ -1,15 +1,12 @@
-FROM openjdk:17-bullseye
+FROM openjdk:17-alpine
 
 WORKDIR /app
 
-# Debian ベースなので apt-get が使える
-RUN apt-get update && apt-get install -y maven
+RUN apk add --no-cache maven
 
-# ソースコードをコピーしてビルド
 COPY . /app
-RUN mvn clean package -DskipTests
+RUN mvn clean package -DskipTests -B
 
-# JAR をコピー
 COPY target/*.jar app.jar
 
 CMD ["java", "-jar", "app.jar"]
