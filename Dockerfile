@@ -10,7 +10,7 @@ COPY . .
 RUN mvn clean package -DskipTests -B
 
 # 実行用の軽量イメージ
-FROM openjdk:17-bullseye  # ← ここを変更！
+FROM openjdk:17-bullseye
 
 WORKDIR /app
 
