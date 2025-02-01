@@ -1,18 +1,23 @@
-FROM openjdk:17-alpine
+# 修正後の Dockerfile
+FROM maven:3.8.7-openjdk-17 AS build
 
 WORKDIR /app
 
-# Maven をインストール
-RUN apk add --no-cache maven
+# すべてのソースコードをコピー
+COPY . .
 
-# ソースコードをコピー
-COPY . /app
-
-# JAR をビルド (バッチモードでログを抑える)
+# JAR をビルド
 RUN mvn clean package -DskipTests -B
 
-# JAR ファイルをコピー (正しいパスに修正)
-COPY target/*.jar app.jar
+# 実行用の軽量イメージ
+FROM openjdk:17
 
-# アプリケーションを実行
+WORKDIR /app
+
+# `target` の中身を確認する
+RUN ls -la /app/target
+
+# `target/` の JAR を確実にコピー
+COPY --from=build /app/target/*.jar app.jar
+
 CMD ["java", "-jar", "app.jar"]
