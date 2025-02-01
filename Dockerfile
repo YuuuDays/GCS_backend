@@ -1,16 +1,15 @@
-# まずは Maven のビルド環境を使う
-FROM maven:3.8.7-openjdk-17 AS build
+FROM openjdk:17
 
 WORKDIR /app
+
+# Alpine Linux なら apk add で Maven をインストール
+RUN apk add --no-cache maven
 
 # ソースコードをコピーしてビルド
 COPY . /app
 RUN mvn clean package -DskipTests
 
-# 実行用の軽量イメージ
-FROM openjdk:17
-
-WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
+# JAR をコピー
+COPY target/*.jar app.jar
 
 CMD ["java", "-jar", "app.jar"]
