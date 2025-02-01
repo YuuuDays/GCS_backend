@@ -1,9 +1,9 @@
-FROM openjdk:17
+FROM openjdk:17-bullseye
 
 WORKDIR /app
 
-# Alpine Linux なら apk add で Maven をインストール
-RUN apk add --no-cache maven
+# Debian ベースなので apt-get が使える
+RUN apt-get update && apt-get install -y maven
 
 # ソースコードをコピーしてビルド
 COPY . /app
