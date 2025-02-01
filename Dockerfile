@@ -1,8 +1,13 @@
 FROM openjdk:17
+
 WORKDIR /app
 
-# JAR を `target/` からコピー
-ARG JAR_FILE=target/*.jar
-COPY ${JAR_FILE} app.jar
+# Maven を使って JAR をビルド
+COPY . /app
+RUN apt-get update && apt-get install -y maven \
+    && mvn clean package -DskipTests
+
+# JAR をコピー
+COPY target/*.jar app.jar
 
 CMD ["java", "-jar", "app.jar"]
