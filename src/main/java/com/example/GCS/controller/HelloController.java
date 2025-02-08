@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 
-@CrossOrigin(origins = "https://githubcontributesystem.netlify.app") // React のURL
 @RestController
 public class HelloController {
 

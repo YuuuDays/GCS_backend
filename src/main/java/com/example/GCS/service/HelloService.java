@@ -7,6 +7,6 @@ public class HelloService {
 
     public String returnMSG()
     {
-        return "Hello,World!,こんにちは都築さん";
+        return "Hello,World!,改造中";
     }
 }
