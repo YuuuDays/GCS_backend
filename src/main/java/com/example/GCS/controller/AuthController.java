@@ -12,7 +12,6 @@ import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.example.GCS.repository.UserRepository;
 import com.example.GCS.model.User;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
