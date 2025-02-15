@@ -35,3 +35,4 @@ build/
 *.properties
 #FireBase秘密鍵用　#
 *.json
+.env
