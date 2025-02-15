@@ -40,6 +40,8 @@ public class AuthController {
 
     @PostMapping("/verify-token")
     public ResponseEntity<Map<String, Object>> verifyToken(@RequestHeader("Authorization") String idToken) {
+        System.out.println("★idToken: " + idToken);
+        System.out.println("★デバック用ここまで来てるよん");
         try {
             // リクエストの受信をログに記録
             logger.info("Received token verification request");
