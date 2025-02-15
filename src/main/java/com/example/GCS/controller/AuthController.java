@@ -12,13 +12,24 @@ import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.example.GCS.repository.UserRepository;
 import com.example.GCS.model.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.GetMapping;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+
     @Autowired
     private UserRepository userRepository;
+
+    @GetMapping("/hello")
+    public ResponseEntity<String> hello() {
+        logger.info("Received request to /api/auth/hello endpoint");
+        return ResponseEntity.ok("Hello from backend!");
+    }
 
     @PostMapping("/verify-token")
     public ResponseEntity<?> verifyToken(@RequestHeader("Authorization") String idToken) {
