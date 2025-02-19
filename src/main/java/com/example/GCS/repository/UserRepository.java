@@ -5,5 +5,6 @@ import com.example.GCS.model.User;
 import java.util.Optional;
 
 public interface UserRepository extends MongoRepository<User, Long> {
+    //findbyxxxのxxxにはフィールド名を入れる
     Optional<User> findByGoogleId(String googleId);
 } 

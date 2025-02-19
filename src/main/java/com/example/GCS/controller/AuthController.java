@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.Map;
 import org.springframework.web.bind.annotation.RequestBody;
 import java.util.HashMap;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -69,6 +70,8 @@ public class AuthController {
                 response.put("isNewUser", false);
                 return ResponseEntity.ok(response);
             } else {
+                //デバック
+                System.out.println("★ここは新規登録画面");
                 // 新規ユーザーの場合の処理
                 // - Firebaseから取得した基本情報（UID、メール、名前）をレスポンスに含める
                 // - isNewUserフラグをtrueに設定
@@ -100,13 +103,34 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> registerUser(@RequestBody User user) {
-        logger.info("Received user registration request for: {}", user.getEmail());
+        /*引数の説明...フロントからJSON形式で送信される
+            {
+            "googleId": "Firebase認証から取得したUID",
+            "notificationEmail": "通知を受け取るメールアドレス",
+            "gitName": "Gitのユーザー名",
+            "time": "希望する通知時間"
+            }
+        */
+
+        logger.info("Received user registration request for: {}", user.getNotificationEmail());
         try {
+            // 必須フィールドの検証
+            if (user.getGoogleId() == null || user.getNotificationEmail() == null || 
+                user.getGitName() == null || user.getTime() == null) {
+                throw new IllegalArgumentException("必須フィールドが不足しています");
+            }
+
+            // 作成日時を設定
+            user.setCreatedAt(LocalDateTime.now());
+            user.setNotificationEnabled(true);  // デフォルトで通知を有効化
+
             User savedUser = userRepository.save(user);
+            
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("user", savedUser);
             return ResponseEntity.ok(response);
+
         } catch (Exception e) {
             logger.error("User registration failed", e);
             Map<String, Object> errorResponse = new HashMap<>();
