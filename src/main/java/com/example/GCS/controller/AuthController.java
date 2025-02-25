@@ -1,5 +1,6 @@
 package com.example.GCS.controller;
 
+import com.example.GCS.service.LoginService;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,8 +28,14 @@ public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
+    private final LoginService loginService;
+
     @Autowired
     private UserRepository userRepository;
+
+    public AuthController(LoginService loginService) {
+        this.loginService = loginService;
+    }
 
     @GetMapping("/hello")
     public ResponseEntity<Map<String, Object>> hello() {
@@ -41,15 +48,11 @@ public class AuthController {
 
     @PostMapping("/verify-token")
     public ResponseEntity<Map<String, Object>> verifyToken(@RequestHeader("Authorization") String idToken) {
-        System.out.println("★idToken: " + idToken);
-        System.out.println("★デバック用ここまで来てるよん");
+
         try {
-            // リクエストの受信をログに記録
-            logger.info("Received token verification request");
-            
-            // @param idToken: "Bearer "で始まるFirebase認証トークン
-            // トークンから"Bearer "プレフィックスを削除し、FirebaseAuthで検証
-            // 検証に成功すると、ユーザー情報を含むFirebaseTokenオブジェクトが返される
+            //logger.debug("★idToken:"+idToken);
+
+            //ユーザー情報を含むFirebaseTokenオブジェクトが返される
             FirebaseToken decodedToken = FirebaseAuth.getInstance()
                 .verifyIdToken(idToken.replace("Bearer ", ""));
             
@@ -61,6 +64,7 @@ public class AuthController {
             Optional<User> existingUser = userRepository.findByGoogleId(decodedToken.getUid());
             
             if (existingUser.isPresent()) {
+                logger.debug("--- ★ログイン画面 ---");
                 // 既存ユーザーの場合の処理
                 // - ユーザー情報をレスポンスに含める
                 // - isNewUserフラグをfalseに設定
@@ -70,8 +74,7 @@ public class AuthController {
                 response.put("isNewUser", false);
                 return ResponseEntity.ok(response);
             } else {
-                //デバック
-                System.out.println("★ここは新規登録画面");
+                logger.debug("--- ★新規登録画面 ---");
                 // 新規ユーザーの場合の処理
                 // - Firebaseから取得した基本情報（UID、メール、名前）をレスポンスに含める
                 // - isNewUserフラグをtrueに設定
@@ -112,32 +115,38 @@ public class AuthController {
             }
         */
 
-        logger.info("Received user registration request for: {}", user.getNotificationEmail());
-        try {
-            // 必須フィールドの検証
-            if (user.getGoogleId() == null || user.getNotificationEmail() == null || 
-                user.getGitName() == null || user.getTime() == null) {
-                throw new IllegalArgumentException("必須フィールドが不足しています");
-            }
 
-            // 作成日時を設定
-            user.setCreatedAt(LocalDateTime.now());
-            user.setNotificationEnabled(true);  // デフォルトで通知を有効化
-
-            User savedUser = userRepository.save(user);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("user", savedUser);
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
-            logger.error("User registration failed", e);
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("error", "ユーザー登録に失敗しました");
-            errorResponse.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-        }
+        //DBG
+        logger.debug("user:"+user);
+        //
+        Map<String, Object> errorResponse = new HashMap<>();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+//        logger.info("Received user registration request for: {}", user.getNotificationEmail());
+//        try {
+//            // 必須フィールドの検証
+//            if (user.getGoogleId() == null || user.getNotificationEmail() == null ||
+//                user.getGitName() == null || user.getTime() == null) {
+//                throw new IllegalArgumentException("必須フィールドが不足しています");
+//            }
+//
+//            // 作成日時を設定
+//            user.setCreatedAt(LocalDateTime.now());
+//            user.setNotificationEnabled(true);  // デフォルトで通知を有効化
+//
+//            User savedUser = userRepository.save(user);
+//
+//            Map<String, Object> response = new HashMap<>();
+//            response.put("success", true);
+//            response.put("user", savedUser);
+//            return ResponseEntity.ok(response);
+//
+//        } catch (Exception e) {
+//            logger.error("User registration failed", e);
+//            Map<String, Object> errorResponse = new HashMap<>();
+//            errorResponse.put("success", false);
+//            errorResponse.put("error", "ユーザー登録に失敗しました");
+//            errorResponse.put("message", e.getMessage());
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+//        }
     }
 }
