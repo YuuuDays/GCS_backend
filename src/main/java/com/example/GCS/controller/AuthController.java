@@ -50,12 +50,15 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> verifyToken(@RequestHeader("Authorization") String idToken) {
 
         try {
-            //logger.debug("★idToken:"+idToken);
+            // リクエストの受信をログに記録
+            logger.info("Received token verification request");
 
-            //ユーザー情報を含むFirebaseTokenオブジェクトが返される
+            // @param idToken: "Bearer "で始まるFirebase認証トークン
+            // トークンから"Bearer "プレフィックスを削除し、FirebaseAuthで検証
+            // 検証に成功すると、ユーザー情報を含むFirebaseTokenオブジェクトが返される
             FirebaseToken decodedToken = FirebaseAuth.getInstance()
                 .verifyIdToken(idToken.replace("Bearer ", ""));
-            
+            logger.debug("★FirebaseToken decodedToken:"+decodedToken);
             // レスポンス用のMapを初期化
             Map<String, Object> response = new HashMap<>();
             

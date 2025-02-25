@@ -1,6 +1,7 @@
 package com.example.GCS.service;
 
 import com.example.GCS.controller.AuthController;
+import com.example.GCS.model.User;
 import com.example.GCS.repository.UserRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
@@ -9,10 +10,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
+@Service
 public class LoginService {
 
     private final UserRepository userRepository;
@@ -34,9 +38,11 @@ public class LoginService {
             //ユーザー情報を含むFirebaseTokenオブジェクトが返される
             FirebaseToken decodedToken = firebaseAuth.verifyIdToken(replaceIdToken);
 
-
             // レスポンス用のMapを初期化
             Map<String, Object> response = new HashMap<>();
+            // @return Optional<User> - ユーザーが存在する場合はユーザー情報、存在しない場合は空のOptional
+            Optional<User> existingUser = userRepository.findByGoogleId(decodedToken.getUid());
+
             //ユーザー情報を含むFirebaseTokenオブジェクトが返す
             return ResponseEntity.ok(response);
         } catch (FirebaseAuthException e) {
