@@ -4,8 +4,6 @@ import com.example.GCS.repository.UserRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
-import com.google.firebase.ErrorCode;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -20,14 +18,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-class LoginServiceTest {
+class AuthServiceTest {
 
     @Mock
     private UserRepository userRepository;
     @Mock
     private FirebaseAuth firebaseAuth;
 
-    private LoginService loginService;
+    private AuthService authService;
     public static FirebaseToken mockToken;
     public static String idToken;
 
@@ -43,7 +41,7 @@ class LoginServiceTest {
         //ここで明示するので@Mockが使える
         MockitoAnnotations.openMocks(this);
         //LoginServiveのDIとしてMockを注入
-        loginService = new LoginService(userRepository,firebaseAuth);
+        authService = new AuthService(userRepository,firebaseAuth);
     }
 
     @Test
@@ -52,7 +50,7 @@ class LoginServiceTest {
          idToken = "Bearer test-token";
 
         // テスト対象メソッドの実行
-        ResponseEntity<Map<String, Object>> response = loginService.verifyToken(idToken);
+        ResponseEntity<Map<String, Object>> response = authService.verifyToken(idToken);
 
         // 検証
         assertNotNull(response);
@@ -72,7 +70,7 @@ class LoginServiceTest {
         // firebaseAuthの振る舞いを設定
         when(firebaseAuth.verifyIdToken("test-token")).thenReturn(mockToken);
         // When（テスト対象の処理を実行）
-        ResponseEntity<Map<String, Object>> response = loginService.verifyToken(idToken);
+        ResponseEntity<Map<String, Object>> response = authService.verifyToken(idToken);
 
         // Then（結果の検証）
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -98,7 +96,7 @@ class LoginServiceTest {
 
         // ===== テストの実行フェーズ =====
         // 実際にLoginServiceのverifyTokenメソッドを呼び出し
-        ResponseEntity<Map<String, Object>> response = loginService.verifyToken(idToken);
+        ResponseEntity<Map<String, Object>> response = authService.verifyToken(idToken);
 
         // ===== 検証フェーズ =====
         // 期待される応答データの準備
@@ -122,7 +120,7 @@ class LoginServiceTest {
         String idToken = "";
 
         // テスト対象メソッドの実行
-        ResponseEntity<Map<String, Object>> response = loginService.verifyToken(idToken);
+        ResponseEntity<Map<String, Object>> response = authService.verifyToken(idToken);
 
         // 検証
         assertNotNull(response);

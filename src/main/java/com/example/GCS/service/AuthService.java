@@ -1,6 +1,5 @@
 package com.example.GCS.service;
 
-import com.example.GCS.controller.AuthController;
 import com.example.GCS.model.User;
 import com.example.GCS.repository.UserRepository;
 import com.google.firebase.auth.FirebaseAuth;
@@ -17,23 +16,25 @@ import java.util.Map;
 import java.util.Optional;
 
 @Service
-public class LoginService {
+public class AuthService {
 
     private final UserRepository userRepository;
     private final FirebaseAuth firebaseAuth;
 
-    private static final Logger logger = LoggerFactory.getLogger(LoginService.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
-    public LoginService(UserRepository userRepository, FirebaseAuth firebaseAuth) {
+    public AuthService(UserRepository userRepository, FirebaseAuth firebaseAuth) {
         this.userRepository = userRepository;
         this.firebaseAuth = firebaseAuth;
     }
 
 
-    public ResponseEntity<Map<String, Object>> verifyToken(String idToken) // @param idToken: "Bearer "で始まるFirebase認証トークン
-    {
+    /*
+     * Firebase→google認証UID取り出し新規登録orログイン遷移
+     */
+    public ResponseEntity<Map<String, Object>> verifyToken(String idToken) {
         String replaceIdToken = idToken.replace("Bearer ", "");
-        logger.debug("★idToken:"+idToken);
+        logger.debug("★idToken:" + idToken);
         try {
             //ユーザー情報を含むFirebaseTokenオブジェクトが返される
             FirebaseToken decodedToken = firebaseAuth.verifyIdToken(replaceIdToken);
@@ -45,15 +46,12 @@ public class LoginService {
             Map<String, Object> response = new HashMap<>();
 
             //ここから "新規登録/ログイン" で分岐
-            if(existingUser.isPresent())
-            {
+            if (existingUser.isPresent()) {
                 logger.debug("--- ★ログイン画面★ ---");
                 response.put("success", true);
-                response.put("user",existingUser.get());
+                response.put("user", existingUser.get());
                 response.put("isNewUser", false);
-            }
-            else
-            {
+            } else {
                 logger.debug("--- ★新規登録★ ---");
                 response.put("success", true);
                 response.put("user", Map.of(
@@ -77,7 +75,6 @@ public class LoginService {
             errorResponse.put("message", e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
-
 
     }
 }

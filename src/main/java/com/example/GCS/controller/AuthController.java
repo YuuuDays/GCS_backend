@@ -1,27 +1,24 @@
 package com.example.GCS.controller;
 
-import com.example.GCS.service.LoginService;
+import com.example.GCS.service.AuthService;
 import com.example.GCS.service.RegisterService;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseToken;
-import com.google.firebase.auth.FirebaseAuthException;
-import com.example.GCS.repository.UserRepository;
 import com.example.GCS.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
-import java.util.Optional;
+
 import java.util.Map;
+
 import org.springframework.web.bind.annotation.RequestBody;
+
 import java.util.HashMap;
-import java.time.LocalDateTime;
+
 
 @RestController
 @RequestMapping("/api/auth")
@@ -29,29 +26,33 @@ public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
-    private final LoginService loginService;
+    private final AuthService authService;
+    private final RegisterService registerService;
 
-    @Autowired
-    private UserRepository userRepository;
 
-    public AuthController(LoginService loginService) {
-        this.loginService = loginService;
+    public AuthController(AuthService authService, RegisterService registerService) {
+        this.authService = authService;
+        this.registerService = registerService;
     }
 
-    @GetMapping("/hello")
-    public ResponseEntity<Map<String, Object>> hello() {
-        logger.info("Received request to /api/auth/hello endpoint");
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("message", "Hello from backend!");
-        return ResponseEntity.ok(response);
-    }
+//    @GetMapping("/hello")
+//    public ResponseEntity<Map<String, Object>> hello() {
+//        logger.info("Received request to /api/auth/hello endpoint");
+//        Map<String, Object> response = new HashMap<>();
+//        response.put("success", true);
+//        response.put("message", "Hello from backend!");
+//        return ResponseEntity.ok(response);
+//    }
 
+    /*
+     * Google認証データから新規登録or既存ユーザ(ログイン)か判断
+     */
     @PostMapping("/verify-token")
     public ResponseEntity<Map<String, Object>> verifyToken(@RequestHeader("Authorization") String idToken) {
 
-        return loginService.verifyToken(idToken);
+        return authService.verifyToken(idToken);
     }
+
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> registerUser(@RequestBody User user) {
@@ -63,13 +64,10 @@ public class AuthController {
             "time": "希望する通知時間"
             }
         */
+        return registerService.registerCheck(user);
 
-
-        //DBG
-        logger.debug("user:"+user);
-        //
-        Map<String, Object> errorResponse = new HashMap<>();
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+//        Map<String, Object> errorResponse = new HashMap<>();
+//        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
 //        logger.info("Received user registration request for: {}", user.getNotificationEmail());
 //        try {
 //            // 必須フィールドの検証

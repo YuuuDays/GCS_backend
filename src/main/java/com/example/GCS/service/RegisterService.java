@@ -1,41 +1,44 @@
 package com.example.GCS.service;
 
 import com.example.GCS.model.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 public class RegisterService {
+    private static final Logger logger = LoggerFactory.getLogger(RegisterService.class);
 
-    public void registerCheck(User user){
-        //必須チェック
-        //形式チェック
-        //重複チェック
+    private ResponseEntity<Map<String, Object>> createErrorResponse(String msg) {
 
     }
-    /* 与えられた引数の文字列を使いgithubアカウントが存在するか調べる有れば(200 = true)
-            なければ(またはエラー= 400)false
-    */
-    public boolean checkGitHubAccount(String userName) {
-        String urlString = "https://api.github.com/users/" + userName;
 
-        try{
-            URL url = new URL(urlString);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setRequestProperty("User-Agent", "Mozilla/5.0");
-            connection.connect();
-
-            int resCode = connection.getResponseCode();
-            connection.disconnect();
-
-            return resCode == 200;
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
+    /*
+     * MEMO
+     * フロントに返すJSONの例
+     * // 成功の場合
+        {
+            "success": true,
+            "data": { ... }
         }
 
+        // エラーの場合
+        {
+            "success": false,
+            "errors": {
+                "notificationEmail": "このメールアドレスは既に登録されています",
+                "gitName": "GitHubユーザー名が存在しません"
+         }
+     */
+    public ResponseEntity<Map<String, Object>> registerCheck(User user) {
+
+        logger.debug("user:" + user);
+        //ここでバリデーションチェックserviceに飛ばして検査してもう
+
+        Map<String, Object> response = new HashMap<>();
+        return ResponseEntity.ok(response);
     }
+
 }
