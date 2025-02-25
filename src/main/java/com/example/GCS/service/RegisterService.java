@@ -12,7 +12,8 @@ public class RegisterService {
     private static final Logger logger = LoggerFactory.getLogger(RegisterService.class);
 
     private ResponseEntity<Map<String, Object>> createErrorResponse(String msg) {
-
+        Map<String, Object> response = new HashMap<>();
+        return ResponseEntity.ok(response);
     }
 
     /*
