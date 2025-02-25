@@ -38,13 +38,33 @@ public class LoginService {
             //ユーザー情報を含むFirebaseTokenオブジェクトが返される
             FirebaseToken decodedToken = firebaseAuth.verifyIdToken(replaceIdToken);
 
-            // レスポンス用のMapを初期化
-            Map<String, Object> response = new HashMap<>();
             // @return Optional<User> - ユーザーが存在する場合はユーザー情報、存在しない場合は空のOptional
             Optional<User> existingUser = userRepository.findByGoogleId(decodedToken.getUid());
 
-            //ユーザー情報を含むFirebaseTokenオブジェクトが返す
+            // レスポンス用のMapを初期化
+            Map<String, Object> response = new HashMap<>();
+
+            //ここから "新規登録/ログイン" で分岐
+            if(existingUser.isPresent())
+            {
+                logger.debug("--- ★ログイン画面★ ---");
+                response.put("success", true);
+                response.put("user",existingUser.get());
+                response.put("isNewUser", false);
+            }
+            else
+            {
+                logger.debug("--- ★新規登録★ ---");
+                response.put("success", true);
+                response.put("user", Map.of(
+                        "googleId", decodedToken.getUid(),
+                        "email", decodedToken.getEmail(),
+                        "name", decodedToken.getName()
+                ));
+                response.put("isNewUser", true);
+            }
             return ResponseEntity.ok(response);
+
         } catch (FirebaseAuthException e) {
             // トークン検証に失敗した場合のエラーハンドリング
             // - エラー内容をログに記録
