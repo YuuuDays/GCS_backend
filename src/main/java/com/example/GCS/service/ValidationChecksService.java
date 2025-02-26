@@ -1,5 +1,7 @@
 package com.example.GCS.service;
 
+import com.example.GCS.model.User;
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -11,7 +13,10 @@ import java.net.URL;
 public class ValidationChecksService {
 
 
-
+    public boolean checkNULLThatUserOfModel(User user)
+    {
+        return true;
+    }
 
     /* 与えられた引数の文字列を使いgithubアカウントが存在するか調べる有れば(200 = true)
         なければ(またはエラー= 400)false

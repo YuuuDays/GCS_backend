@@ -1,6 +1,7 @@
 package com.example.GCS.service;
 
 import com.example.GCS.model.User;
+import com.example.GCS.utils.ResponseBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -10,12 +11,6 @@ import java.util.Map;
 
 public class RegisterService {
     private static final Logger logger = LoggerFactory.getLogger(RegisterService.class);
-
-    private ResponseEntity<Map<String, Object>> createErrorResponse(String msg) {
-        Map<String, Object> response = new HashMap<>();
-        return ResponseEntity.ok(response);
-    }
-
     /*
      * MEMO
      * フロントに返すJSONの例
@@ -34,11 +29,19 @@ public class RegisterService {
          }
      */
     public ResponseEntity<Map<String, Object>> registerCheck(User user) {
-
         logger.debug("user:" + user);
-        //ここでバリデーションチェックserviceに飛ばして検査してもう
 
+        // NULLチェック
+        if(user == null) {
+            return new ResponseBuilder()
+                        .success(false)
+                        .addError("error","値が無い、または不正です")
+                        .build();
+        }
+
+        // 初期化
         Map<String, Object> response = new HashMap<>();
+
         return ResponseEntity.ok(response);
     }
 
