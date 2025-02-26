@@ -8,8 +8,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.AddressException;
+import java.time.format.DateTimeParseException;
 import java.util.Optional;
-
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -88,5 +90,25 @@ public class ValidationChecksService {
             logger.error("checkGitHubAccount error:"+ e);
             return ValidationResult.error("github", "GitHubアカウントの検証中にエラーが発生しました");
         }
+    }
+
+    // 概要: ユーザーの決めた時間の値が不正でないかどうか
+    public ValidationResult checkNotificationTime(String time)
+    {
+        // null check
+        if(time == null || time.isEmpty())
+        {
+            return  ValidationResult.error("time","通知時間が空です");
+        }
+        // 例:"HH:mm"以外のフォーマットは弾く
+        try
+        {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+            LocalTime.parse(time, formatter);
+        }catch (DateTimeParseException e)
+        {
+            return ValidationResult.error("time","通知時間が不正です");
+        }
+        return ValidationResult.success();
     }
 }

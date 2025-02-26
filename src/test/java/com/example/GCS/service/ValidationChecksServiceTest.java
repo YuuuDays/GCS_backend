@@ -115,4 +115,31 @@ class ValidationChecksServiceTest {
     //         assertThat(result.isValid(), equalTo(true));
     //     }
     // }
+
+    /* 通知時間 */
+    @Test
+    void checkNotificationTime_normal()
+    {
+        String time = "23:45";
+        result = validationChecksService.checkNotificationTime(time);
+        ValidationResult expected = ValidationResult.success();
+        assertThat(result,equalTo(expected));
+    }
+    @Test
+    void checkNotificationTime_null()
+    {
+        String time = "";
+        result = validationChecksService.checkNotificationTime(time);
+        ValidationResult expected = ValidationResult.error("time","通知時間が空です");
+        assertThat(result,equalTo(expected));
+    }
+    @Test
+    void checkNotificationTime_invalidValue()
+    {
+        String time = "こんにちは";
+        result = validationChecksService.checkNotificationTime(time);
+        ValidationResult expected = ValidationResult.error("time","通知時間が不正です");
+        assertThat(result,equalTo(expected));
+    }
+
 }

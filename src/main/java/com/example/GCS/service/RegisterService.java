@@ -1,5 +1,6 @@
 package com.example.GCS.service;
 
+import com.example.GCS.dto.RegisterDTO;
 import com.example.GCS.model.User;
 import com.example.GCS.utils.ResponseBuilder;
 import com.example.GCS.validation.ValidationResult;
@@ -63,20 +64,42 @@ public class RegisterService {
                     .build();
         }
         /*-------------------------------------------------------------
-         * GithubAccountチェック  ここから
+         * GithubAccountチェック
          *------------------------------------------------------------*/
         ValidationResult errorJug_github =  validationChecksService.checkGitHubAccount(user.getGitName());
         // バリデーションチェック
         if(! errorJug_github.isValid())
         {
-            logger.debug("★errorJug_github　that error is = " + errorJug_github.getErrorMessage());
+            logger.debug("★errorJug_github that error is = " + errorJug_github.getErrorMessage());
             return new ResponseBuilder()
                     .success(false)
                     .addError(errorJug_github.getField(),errorJug_github.getErrorMessage())
                     .build();
         }
         /*-------------------------------------------------------------
-         * バリデーションチェック終わり　登録
+         * 通知時間チェック
+         *------------------------------------------------------------*/
+        ValidationResult errorJug_time = validationChecksService.checkNotificationTime(user.getTime());
+        // バリデーションチェック
+        if(! errorJug_time.isValid())
+        {
+            logger.debug("★errorJug_time that error is = " + errorJug_time.getErrorMessage());
+            return new ResponseBuilder()
+                    .success(false)
+                    .addError(errorJug_time.getField(),errorJug_time.getErrorMessage())
+                    .build();
+        }
+        /*-------------------------------------------------------------
+         * バリデーションチェック済みのモデルをDTOへ
+         *------------------------------------------------------------*/
+        RegisterDTO registerDTO = new RegisterDTO();
+        registerDTO.setGoogleId(user.getGoogleId());
+        registerDTO.setNotificationEmail(user.getNotificationEmail());
+        registerDTO.setGitName(user.getGitName());
+        registerDTO.setTime(user.getTime());
+
+        /*-------------------------------------------------------------
+         * DBへ登録
          *------------------------------------------------------------*/
 
         // 初期化
