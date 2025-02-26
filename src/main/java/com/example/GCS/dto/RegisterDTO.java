@@ -1,6 +1,7 @@
 package com.example.GCS.dto;
 
 import lombok.Data;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -9,6 +10,8 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Data
 public class RegisterDTO {
 
+    @Id
+    private String id;          // MongoDBの内部ID
     /*必須 */
     @Indexed(unique = true)     // インデックスを追加して検索を高速化
     private String googleId;     // Googleログイン用のUID

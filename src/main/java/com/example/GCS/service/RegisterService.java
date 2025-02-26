@@ -2,10 +2,13 @@ package com.example.GCS.service;
 
 import com.example.GCS.dto.RegisterDTO;
 import com.example.GCS.model.User;
+import com.example.GCS.repository.RegisterRepository;
 import com.example.GCS.utils.ResponseBuilder;
 import com.example.GCS.validation.ValidationResult;
+import com.mongodb.MongoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +18,14 @@ import java.util.Map;
 @Service
 public class RegisterService {
     private static final Logger logger = LoggerFactory.getLogger(RegisterService.class);
-    private final ValidationChecksService validationChecksService;
 
-    public RegisterService(ValidationChecksService validationChecksService)
+    private final ValidationChecksService validationChecksService;
+    private final RegisterRepository registerRepository;
+
+    public RegisterService(ValidationChecksService validationChecksService, RegisterRepository registerRepository)
     {
         this.validationChecksService = validationChecksService;
+        this.registerRepository = registerRepository;
     }
     /*
      * MEMO
@@ -68,7 +74,7 @@ public class RegisterService {
          *------------------------------------------------------------*/
         ValidationResult errorJug_github =  validationChecksService.checkGitHubAccount(user.getGitName());
         // バリデーションチェック
-        if(! errorJug_github.isValid())
+        if( !errorJug_github.isValid() )
         {
             logger.debug("★errorJug_github that error is = " + errorJug_github.getErrorMessage());
             return new ResponseBuilder()
@@ -81,7 +87,7 @@ public class RegisterService {
          *------------------------------------------------------------*/
         ValidationResult errorJug_time = validationChecksService.checkNotificationTime(user.getTime());
         // バリデーションチェック
-        if(! errorJug_time.isValid())
+        if( !errorJug_time.isValid() )
         {
             logger.debug("★errorJug_time that error is = " + errorJug_time.getErrorMessage());
             return new ResponseBuilder()
@@ -101,11 +107,33 @@ public class RegisterService {
         /*-------------------------------------------------------------
          * DBへ登録
          *------------------------------------------------------------*/
-
-        // 初期化
+        // レスポンス初期化
         Map<String, Object> response = new HashMap<>();
-
-        return ResponseEntity.ok(response);
+        try
+        {
+            RegisterDTO saved = registerRepository.save(registerDTO);
+            if(saved.getId() == null)
+            {
+                logger.debug("★DB登録失敗" );
+                return new ResponseBuilder()
+                        .success(false)
+                        .addError("error","DB登録失敗")
+                        .build();
+            }
+        }catch (DataAccessException | MongoException e)
+        {
+            e.printStackTrace();
+            logger.debug("★DB登録失敗" );
+            return new ResponseBuilder()
+                    .success(false)
+                    .addError("error","DB登録失敗")
+                    .build();
+        }
+        //ここに入ったら成功
+        logger.debug("★DBに登録成功");
+        return new ResponseBuilder()
+                .success(true)
+                .build();
     }
 
 }
