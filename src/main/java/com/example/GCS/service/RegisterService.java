@@ -5,10 +5,12 @@ import com.example.GCS.utils.ResponseBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Service
 public class RegisterService {
     private static final Logger logger = LoggerFactory.getLogger(RegisterService.class);
     /*
@@ -38,6 +40,11 @@ public class RegisterService {
                         .addError("error","値が無い、または不正です")
                         .build();
         }
+        // メアドチェック
+//        if(!ここで別のサービス関数へ(user.getLoginEmail()))
+//        {
+//            ここではエラーレスポンス返し
+//        }
 
         // 初期化
         Map<String, Object> response = new HashMap<>();
