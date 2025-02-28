@@ -44,7 +44,7 @@ public class RegisterService {
                 "gitName": "GitHubユーザー名が存在しません"
          }
      */
-    public ResponseEntity<Map<String, Object>> registerCheck(User user) {
+    public ResponseEntity<Map<String, Object>> register(User user) {
 
         logger.debug("user:" + user);
         // googleIdチェック
@@ -60,41 +60,41 @@ public class RegisterService {
          * メールアドレスチェック
          *------------------------------------------------------------*/
         // メアドチェック
-        ValidationResult errorJug_mail = validationChecksService.checkSendMail(user.getNotificationEmail());
+        ValidationResult errorJugMail = validationChecksService.checkSendMail(user.getNotificationEmail());
 
         // 何らかのバリデーションチェックエラーの場合
-        if( !errorJug_mail.isValid() )
+        if( !errorJugMail.isValid() )
         {
-            logger.debug("★errorJug_mail that error is = " + errorJug_mail.getErrorMessage());
+            logger.debug("★errorJug_mail that error is = " + errorJugMail.getErrorMessage());
             return new ResponseBuilder()
                     .success(false)
-                    .addError(errorJug_mail.getField(),errorJug_mail.getErrorMessage())
+                    .addError(errorJugMail.getField(),errorJugMail.getErrorMessage())
                     .build();
         }
         /*-------------------------------------------------------------
          * GithubAccountチェック
          *------------------------------------------------------------*/
-        ValidationResult errorJug_github =  validationChecksService.checkGitHubAccount(user.getGitName());
+        ValidationResult errorJugGithub =  validationChecksService.checkGitHubAccount(user.getGitName());
         // バリデーションチェック
-        if( !errorJug_github.isValid() )
+        if( !errorJugGithub.isValid() )
         {
-            logger.debug("★errorJug_github that error is = " + errorJug_github.getErrorMessage());
+            logger.debug("★errorJugGithub that error is = " + errorJugGithub.getErrorMessage());
             return new ResponseBuilder()
                     .success(false)
-                    .addError(errorJug_github.getField(),errorJug_github.getErrorMessage())
+                    .addError(errorJugGithub.getField(),errorJugGithub.getErrorMessage())
                     .build();
         }
         /*-------------------------------------------------------------
          * 通知時間チェック
          *------------------------------------------------------------*/
-        ValidationResult errorJug_time = validationChecksService.checkNotificationTime(user.getTime());
+        ValidationResult errorJugTime = validationChecksService.checkNotificationTime(user.getTime());
         // バリデーションチェック
-        if( !errorJug_time.isValid() )
+        if( !errorJugTime.isValid() )
         {
-            logger.debug("★errorJug_time that error is = " + errorJug_time.getErrorMessage());
+            logger.debug("★errorJugTime that error is = " + errorJugTime.getErrorMessage());
             return new ResponseBuilder()
                     .success(false)
-                    .addError(errorJug_time.getField(),errorJug_time.getErrorMessage())
+                    .addError(errorJugTime.getField(),errorJugTime.getErrorMessage())
                     .build();
         }
         /*-------------------------------------------------------------

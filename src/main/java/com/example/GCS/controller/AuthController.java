@@ -11,13 +11,10 @@ import org.springframework.http.ResponseEntity;
 import com.example.GCS.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.RequestBody;
-
-import java.util.HashMap;
 
 
 @RestController
@@ -64,7 +61,7 @@ public class AuthController {
             "time": "希望する通知時間"
             }
         */
-        ResponseEntity<Map<String,Object>> res = registerService.registerCheck(user);
+        ResponseEntity<Map<String,Object>> res = registerService.register(user);
         logger.debug("★/registerのres =" + res );
         return res;
 
