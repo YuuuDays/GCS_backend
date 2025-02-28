@@ -36,7 +36,7 @@ public class ValidationChecksService {
         // null or 空文字チェック
         if(mail == null || mail.isEmpty())
         {
-            return  ValidationResult.error("email","メールアドレスが空です");
+            return  ValidationResult.error("notificationEmail","メールアドレスが空です");
         }
         
         //　形式チェック
@@ -44,13 +44,13 @@ public class ValidationChecksService {
             InternetAddress internetAddress = new InternetAddress(mail);
             internetAddress.validate();
         }catch(AddressException e){
-            return  ValidationResult.error("email","メールアドレスが不正です");
+            return  ValidationResult.error("notificationEmail","メールアドレスが不正です");
         }
 
         // 通知用メアド使用済みじゃないかどうか
         Optional<User> userOpt = userRepository.findByNotificationEmail(mail);
         if (userOpt.isPresent()) {
-            return ValidationResult.error("email", userOpt.get().getNotificationEmail() + "は既に使用されています");
+            return ValidationResult.error("notificationEmail", userOpt.get().getNotificationEmail() + "は既に使用されています");
         }
 
         return ValidationResult.success();
@@ -63,7 +63,7 @@ public class ValidationChecksService {
         //null or 空文字チェック
         if(userName == null || userName.isEmpty())
         {
-            return  ValidationResult.error("github","GitHubアカウント文字列が空です");
+            return  ValidationResult.error("gitName","GitHubアカウント文字列が空です");
         }
         String urlString = "https://api.github.com/users/" + userName;
 
@@ -80,7 +80,7 @@ public class ValidationChecksService {
             // 404の場合、アカウントが存在しないと判断
             if (resCode == 404) {
                 logger.debug("★githubAccount is none");
-                return ValidationResult.error("github", "GitHubアカウントが存在しません");
+                return ValidationResult.error("gitName", "GitHubアカウントが存在しません");
             }
             logger.debug("★githubAccount　正常確認");
             return ValidationResult.success();
@@ -88,7 +88,7 @@ public class ValidationChecksService {
         } catch (IOException e) {
             e.printStackTrace();
             logger.error("checkGitHubAccount error:"+ e);
-            return ValidationResult.error("github", "GitHubアカウントの検証中にエラーが発生しました");
+            return ValidationResult.error("gitName", "GitHubアカウントの検証中にエラーが発生しました");
         }
     }
 

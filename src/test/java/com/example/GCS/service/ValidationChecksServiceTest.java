@@ -54,7 +54,7 @@ class ValidationChecksServiceTest {
         // When
         ValidationResult result = validationChecksService.checkSendMail(emptyEmail);
         // Then
-        ValidationResult expected = ValidationResult.error("email", "メールアドレスが空です");
+        ValidationResult expected = ValidationResult.error("notificationEmail", "メールアドレスが空です");
         assertThat(result, equalTo(expected));
     }
 
@@ -65,7 +65,7 @@ class ValidationChecksServiceTest {
         // When
         ValidationResult result = validationChecksService.checkSendMail(invalidEmail);
         // Then
-        ValidationResult expected = ValidationResult.error("email", "メールアドレスが不正です");
+        ValidationResult expected = ValidationResult.error("notificationEmail", "メールアドレスが不正です");
         assertThat(result, equalTo(expected));
     }
 
@@ -79,7 +79,7 @@ class ValidationChecksServiceTest {
         when(userRepository.findByNotificationEmail(x)).thenReturn(Optional.of(user));
         // 実測値
         result = validationChecksService.checkSendMail(x);
-        ValidationResult expected = ValidationResult.error("email", user.getNotificationEmail() + "は既に使用されています");
+        ValidationResult expected = ValidationResult.error("notificationEmail", user.getNotificationEmail() + "は既に使用されています");
         assertThat(result, equalTo(expected));
     }
 

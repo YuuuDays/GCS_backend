@@ -45,15 +45,17 @@ public class RegisterService {
          }
      */
     public ResponseEntity<Map<String, Object>> registerCheck(User user) {
-        logger.debug("user:" + user);
 
-        // NULLチェック
-        if(user == null) {
+        logger.debug("user:" + user);
+        // googleIdチェック
+        if(user.getGoogleId() == null || user.getGoogleId().isEmpty())
+        {
             return new ResponseBuilder()
                     .success(false)
-                    .addError("error","値が無い、または不正です")
+                    .addError("googleId","googleIdが不正です。もう一度最初からやり直してください")
                     .build();
         }
+
         /*-------------------------------------------------------------
          * メールアドレスチェック
          *------------------------------------------------------------*/

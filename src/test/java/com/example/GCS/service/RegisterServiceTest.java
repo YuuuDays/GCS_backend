@@ -1,6 +1,16 @@
 package com.example.GCS.service;
 
+import com.example.GCS.model.User;
+import com.example.GCS.repository.RegisterRepository;
+import com.example.GCS.repository.UserRepository;
+import com.example.GCS.utils.ResponseBuilder;
+import com.example.GCS.validation.ValidationResult;
+import org.apache.coyote.Response;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.ResponseEntity;
 
 import java.util.Map;
 
@@ -11,17 +21,25 @@ public class RegisterServiceTest {
 
     private RegisterService registerService;
 
-//    @Test
-//    void testCreateErrRes()
-//    {
-//        String inputMsg = "こんにちわ";
-//        Map<String,Object> result = registerService.
-//        assertEquals();
-//    }
+    @Mock
+    private RegisterRepository registerRepository;
+    @Mock
+    private ValidationChecksService validationChecksService;
 
+    @BeforeEach
+    void setup(){
+        MockitoAnnotations.openMocks(this);
+        registerService = new RegisterService(validationChecksService,registerRepository);
+    }
     @Test
-    void test1()
+    void testGoogleId_NUll_check()
     {
+        User user = new User();
+        ResponseEntity<Map<String,Object>> result = registerService.registerCheck(user);
+        ResponseEntity<Map<String,Object>> expected = new ResponseBuilder()
+                .success(false)
+                .addError("googleId","googleIdが不正です。もう一度最初からやり直してください")
+                .build();
 
     }
 }

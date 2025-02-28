@@ -64,7 +64,9 @@ public class AuthController {
             "time": "希望する通知時間"
             }
         */
-        return registerService.registerCheck(user);
+        ResponseEntity<Map<String,Object>> res = registerService.registerCheck(user);
+        logger.debug("★/registerのres =" + res );
+        return res;
 
 //        Map<String, Object> errorResponse = new HashMap<>();
 //        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
