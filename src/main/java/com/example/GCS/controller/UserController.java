@@ -1,6 +1,7 @@
 package com.example.GCS.controller;
 
 
+import com.example.GCS.model.User;
 import com.example.GCS.service.UserService;
 import com.example.GCS.utils.ResponseBuilder;
 import com.google.firebase.auth.FirebaseToken;
@@ -19,13 +20,13 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
-    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     public UserController(UserService userService) {
         this.userService = userService;
     }
 
-    // 概要: ログイン後のユーザ情報表示
+    // 概要: ログイン後のユーザ情報表示の為の値を返す
     @PostMapping("/info")
     public ResponseEntity<Map<String,Object>> editUserInfo(@RequestHeader("Authorization") String idToken,
                                                            @RequestBody Map<String, String> requestBody)
@@ -35,14 +36,22 @@ public class UserController {
 
         // JWT検証用
         FirebaseToken firebaseToken;
+        // 返答用
+        Map<String, Object> response = new HashMap<>();
 
         /* ------------------------------
          * JWT検証
          -------------------------------- */
-        try
-        {
+        try {
             firebaseToken = userService.verifyJWT(idToken);
+        }catch (IllegalArgumentException e){
+            // JWT 引数エラー
+            logger.error("Invalid input: " + e.getMessage());
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         } catch (RuntimeException e) {
+            // JWT 検証エラー
             logger.error("Token verification failed: " + e.getMessage());
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
@@ -53,9 +62,34 @@ public class UserController {
         /* ------------------------------
          * JWTのuidとRequestBodyのuid比較
          -------------------------------- */
+        if(!userService.ComparisonOfUID(firebaseToken,requestBody))
+        {
+            response.put("success", false);
+            response.put("message", "uidが一致しません");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
 
+        /* ------------------------------
+         * DBから値取得
+         -------------------------------- */
+        User user =  userService.getPersonalInfomation(firebaseToken.getUid());
+        if(user == null)
+        {
+            response.put("success", false);
+            response.put("message", "DBに登録されている値と不一致");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+        logger.debug("★user is "+ user);
+        /* ------------------------------
+         * レスポンスの組み立て
+         -------------------------------- */
+        response.put("success", true);
+        response.put("uid",user.getGoogleId());
+        response.put("notificationEmail",user.getNotificationEmail());
+        response.put("gitName",user.getGitName());
+        response.put("notificationTime",user.getTime());
+        logger.debug("★response is" + response);
 
-        ResponseEntity<Map<String, Object>> response = new ResponseBuilder().success(false).build();
-        return response;
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

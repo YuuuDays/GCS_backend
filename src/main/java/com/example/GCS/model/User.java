@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import lombok.Data;
+
 import java.time.LocalDateTime;
 
 @Document(collection = "user_info") // MongoDBのコレクション名
@@ -18,14 +19,14 @@ public class User {
 
     @Indexed(unique = true)     // メールアドレスも一意にする
     @Field("mail")// 通知用のメールアドレス（必須）
-    private String notificationEmail; 
+    private String notificationEmail;
 
     @Field("git_name")// Git名()
     private String gitName;
 
     @Field("time")// 通知用時間
     private String time;
-    
+
     @Field("notification_enabled")
     private boolean notificationEnabled; // メール通知の有効/無効
 
@@ -33,19 +34,9 @@ public class User {
     @Id
     private String id;          // MongoDBの内部ID
 
-    private String loginEmail;      // ログイン用のメールアドレス（任意）
-
     private String username;        // ユーザー名
 
     private String photoUrl;     // プロフィール画像URL（Googleから取得可能）
 
 
-    @Field("created_at")
-    private LocalDateTime createdAt; // アカウント作成日時
-
-    @Field("last_login")
-    private LocalDateTime lastLogin; // 最終ログイン日時
-
-
-
-} 
+}

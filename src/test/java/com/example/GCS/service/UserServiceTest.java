@@ -1,5 +1,7 @@
 package com.example.GCS.service;
 
+import com.example.GCS.model.User;
+import com.example.GCS.repository.UserRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
@@ -11,6 +13,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -20,16 +23,18 @@ class UserServiceTest {
 
     @Mock
     private FirebaseAuth firebaseAuth;
+    @Mock
+    private UserRepository userRepository;
     private UserService userService;
 
     @BeforeEach
     void setup(){
         MockitoAnnotations.openMocks(this);
-        userService = new UserService(firebaseAuth);
+        userService = new UserService(firebaseAuth,userRepository);
     }
 
     @Test
-    void verify_normal() throws FirebaseAuthException {
+    void verifyNormal() throws FirebaseAuthException {
         // モックの戻り値を定義
         FirebaseToken mockToken = Mockito.mock(FirebaseToken.class);    //クラスモックオブジェクト
         when(mockToken.getUid()).thenReturn("testUid");
@@ -45,7 +50,7 @@ class UserServiceTest {
     }
 
     @Test
-    void verify_abnormal() throws FirebaseAuthException {
+    void verifyAbnormal() throws FirebaseAuthException {
         FirebaseAuthException mockException = Mockito.mock(FirebaseAuthException.class);
         when(mockException.getMessage()).thenReturn("Invalid token");
         when(firebaseAuth.verifyIdToken(anyString())).thenThrow(mockException);
@@ -63,7 +68,7 @@ class UserServiceTest {
     }
 
     @Test
-    void comparisonOfUID_normal()
+    void comparisonOfUIDNormal()
     {
         //Arrange
         FirebaseToken mockToken = Mockito.mock(FirebaseToken.class);
@@ -73,5 +78,59 @@ class UserServiceTest {
         Boolean result = userService.ComparisonOfUID(mockToken,mockRequestBody);
         //Assert
         assertEquals(true, result);
+    }
+    @Test
+    void comparisonOfUIDAbNormal()
+    {
+        //Arrange
+        FirebaseToken mockToken = Mockito.mock(FirebaseToken.class);
+        when(mockToken.getUid()).thenReturn("testUID");
+        Map<String,String>mockRequestBody = Map.of("uid","djdoidasd");  //uid異常
+        //Act
+        Boolean result = userService.ComparisonOfUID(mockToken,mockRequestBody);
+        //Assert
+        assertEquals(false, result);
+    }
+
+    @Test
+    void comparisonOfUIDArgumentErrorNotUID()
+    {
+        //Arrange
+        FirebaseToken mockToken = Mockito.mock(FirebaseToken.class);
+        when(mockToken.getUid()).thenReturn("testUID");
+        Map<String,String>mockRequestBody = Map.of("uid","");   //uid(key)の値(value)無し
+        //Act&Assert
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,()->
+                userService.ComparisonOfUID(mockToken,mockRequestBody));
+
+        assertEquals("uid is empty or missing",exception.getMessage());
+    }
+    @Test
+    void comparisonOfUIDArgumentErrorNull()
+    {
+        //Arrange
+        FirebaseToken mockToken = Mockito.mock(FirebaseToken.class);
+        when(mockToken.getUid()).thenReturn("testUID");
+        Map<String,String>mockRequestBody = Map.of();   //null
+        //Act&Assert
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,()->
+                userService.ComparisonOfUID(mockToken,mockRequestBody));
+
+        assertEquals("requestBody is null or empty",exception.getMessage());
+    }
+
+    @Test
+    void getPersonalInfomationNormal()
+    {
+        //Arrange
+        UserRepository mockUserRepository = Mockito.mock(UserRepository.class);
+        User mockUser = new User();
+        mockUser.setGoogleId("1234");
+        when(mockUserRepository.findByGoogleId("uid")).thenReturn(Optional.of(mockUser));
+        String uid = "1234";
+        //Act
+        User result = userService.getPersonalInfomation(uid);
+        //Assert
+        assertEquals(mockUser.getGoogleId(),result.getGoogleId());
     }
 }
