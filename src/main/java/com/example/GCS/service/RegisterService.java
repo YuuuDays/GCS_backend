@@ -12,7 +12,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
+// import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -110,18 +110,11 @@ public class RegisterService {
          * DBへ登録
          *------------------------------------------------------------*/
         // レスポンス初期化
-        Map<String, Object> response = new HashMap<>();
+        // Map<String, Object> response = new HashMap<>();
         try
         {
-            RegisterDTO saved = registerRepository.save(registerDTO);
-            if(saved.getId() == null)
-            {
-                logger.debug("★DB登録失敗" );
-                return new ResponseBuilder()
-                        .success(false)
-                        .addError("error","DB登録失敗")
-                        .build();
-            }
+            // 登録
+            registerRepository.save(registerDTO);
         }catch (DataAccessException | MongoException e)
         {
             e.printStackTrace();

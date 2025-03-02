@@ -32,15 +32,6 @@ public class AuthController {
         this.registerService = registerService;
     }
 
-//    @GetMapping("/hello")
-//    public ResponseEntity<Map<String, Object>> hello() {
-//        logger.info("Received request to /api/auth/hello endpoint");
-//        Map<String, Object> response = new HashMap<>();
-//        response.put("success", true);
-//        response.put("message", "Hello from backend!");
-//        return ResponseEntity.ok(response);
-//    }
-
     /*
      * Google認証データから新規登録or既存ユーザ(ログイン)か判断
      */
@@ -65,34 +56,5 @@ public class AuthController {
         logger.debug("★/registerのres =" + res );
         return res;
 
-//        Map<String, Object> errorResponse = new HashMap<>();
-//        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-//        logger.info("Received user registration request for: {}", user.getNotificationEmail());
-//        try {
-//            // 必須フィールドの検証
-//            if (user.getGoogleId() == null || user.getNotificationEmail() == null ||
-//                user.getGitName() == null || user.getTime() == null) {
-//                throw new IllegalArgumentException("必須フィールドが不足しています");
-//            }
-//
-//            // 作成日時を設定
-//            user.setCreatedAt(LocalDateTime.now());
-//            user.setNotificationEnabled(true);  // デフォルトで通知を有効化
-//
-//            User savedUser = userRepository.save(user);
-//
-//            Map<String, Object> response = new HashMap<>();
-//            response.put("success", true);
-//            response.put("user", savedUser);
-//            return ResponseEntity.ok(response);
-//
-//        } catch (Exception e) {
-//            logger.error("User registration failed", e);
-//            Map<String, Object> errorResponse = new HashMap<>();
-//            errorResponse.put("success", false);
-//            errorResponse.put("error", "ユーザー登録に失敗しました");
-//            errorResponse.put("message", e.getMessage());
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-//        }
     }
 }
