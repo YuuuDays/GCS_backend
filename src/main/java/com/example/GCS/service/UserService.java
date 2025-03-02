@@ -2,11 +2,14 @@ package com.example.GCS.service;
 
 import com.example.GCS.model.User;
 import com.example.GCS.repository.UserRepository;
+import com.example.GCS.validation.ValidationResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
+import com.mongodb.MongoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -92,5 +95,32 @@ public class UserService {
         return verifiedUser;
     }
 
+    // 概要: 修正されたユーザー情報をDBに登録する
+    public ValidationResult amendmentRegisteration(Map<String, String> requestBody)
+    {
 
+        try{
+            Optional<User> optionalUser = userRepository.findByGoogleId(requestBody.get("uid"));
+            if (optionalUser.isPresent())
+            {
+                User user = optionalUser.get();
+                logger.debug("★登録前DB値:"+user);
+
+                // 更新対象のフィールドをセット
+                user.setNotificationEmail(requestBody.get("notificationEmail"));
+                user.setGitName(requestBody.get("gitName"));
+                user.setTime(requestBody.get("notificationTime"));
+                // DBの値を更新
+                userRepository.save(user);
+            }else
+            {
+                return ValidationResult.error("error","DB登録失敗");
+            }
+        }catch (DataAccessException | MongoException e)
+        {
+            logger.debug("error :"+ e.getMessage());
+            return ValidationResult.error("error","DB登録失敗");
+        }
+        return ValidationResult.success();
+    }
 }

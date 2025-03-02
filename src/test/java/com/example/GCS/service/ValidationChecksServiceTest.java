@@ -42,7 +42,7 @@ class ValidationChecksServiceTest {
         // Given
         String validEmail = "test@example.com";
         // When
-        ValidationResult result = validationChecksService.checkSendMail(validEmail);
+        ValidationResult result = validationChecksService.checkSendMail(validEmail,false);
         // Then
         assertThat(result, equalTo(ValidationResult.success()));
     }
@@ -52,7 +52,7 @@ class ValidationChecksServiceTest {
         // Given
         String emptyEmail = "";
         // When
-        ValidationResult result = validationChecksService.checkSendMail(emptyEmail);
+        ValidationResult result = validationChecksService.checkSendMail(emptyEmail,false);
         // Then
         ValidationResult expected = ValidationResult.error("notificationEmail", "メールアドレスが空です");
         assertThat(result, equalTo(expected));
@@ -63,7 +63,7 @@ class ValidationChecksServiceTest {
         // Given
         String invalidEmail = "xxx@@@yahoo.co.jp";
         // When
-        ValidationResult result = validationChecksService.checkSendMail(invalidEmail);
+        ValidationResult result = validationChecksService.checkSendMail(invalidEmail,false);
         // Then
         ValidationResult expected = ValidationResult.error("notificationEmail", "メールアドレスが不正です");
         assertThat(result, equalTo(expected));
@@ -78,7 +78,7 @@ class ValidationChecksServiceTest {
         user.setNotificationEmail(x);
         when(userRepository.findByNotificationEmail(x)).thenReturn(Optional.of(user));
         // 実測値
-        result = validationChecksService.checkSendMail(x);
+        result = validationChecksService.checkSendMail(x,false);
         ValidationResult expected = ValidationResult.error("notificationEmail", user.getNotificationEmail() + "は既に使用されています");
         assertThat(result, equalTo(expected));
     }
@@ -90,7 +90,7 @@ class ValidationChecksServiceTest {
         when(userRepository.findByNotificationEmail(x)).thenReturn(Optional.empty());
 
         // 実測値
-        result = validationChecksService.checkSendMail(x);
+        result = validationChecksService.checkSendMail(x,false);
         ValidationResult expected = ValidationResult.success();
         assertThat(result, equalTo(expected));
     }

@@ -60,7 +60,7 @@ public class RegisterService {
          * メールアドレスチェック
          *------------------------------------------------------------*/
         // メアドチェック
-        ValidationResult errorJugMail = validationChecksService.checkSendMail(user.getNotificationEmail());
+        ValidationResult errorJugMail = validationChecksService.checkSendMail(user.getNotificationEmail(),false);
 
         // 何らかのバリデーションチェックエラーの場合
         if( !errorJugMail.isValid() )

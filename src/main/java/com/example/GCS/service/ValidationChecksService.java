@@ -30,8 +30,12 @@ public class ValidationChecksService {
         this.userRepository = userRepository;
     }
 
-    // 概要:通知用メールアドレスのチェック
-    public ValidationResult checkSendMail(String mail)
+    /* 概要:通知用メールアドレスのチェック
+     * 引数:第一引数  ...精査したいメアド
+     *       第二引数 ...初回時false(DBにあるメアドと重複していないか見る為),
+     *                 編集時true
+     */
+    public ValidationResult checkSendMail(String mail,Boolean isEditFLG)
     {
         // null or 空文字チェック
         if(mail == null || mail.isEmpty())
@@ -48,9 +52,11 @@ public class ValidationChecksService {
         }
 
         // 通知用メアド使用済みじゃないかどうか
-        Optional<User> userOpt = userRepository.findByNotificationEmail(mail);
-        if (userOpt.isPresent()) {
-            return ValidationResult.error("notificationEmail", userOpt.get().getNotificationEmail() + "は既に使用されています");
+        if(!isEditFLG){
+            Optional<User> userOpt = userRepository.findByNotificationEmail(mail);
+            if (userOpt.isPresent()) {
+                return ValidationResult.error("notificationEmail", userOpt.get().getNotificationEmail() + "は既に使用されています");
+            }
         }
 
         return ValidationResult.success();
