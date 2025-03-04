@@ -4,7 +4,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import com.example.GCS.model.User;
 import java.util.Optional;
 
-public interface UserRepository extends MongoRepository<User, Long> {
+public interface UserRepository extends MongoRepository<User, String> {
     //findbyxxxのxxxにはフィールド名を入れる
     Optional<User> findByGoogleId(String googleId);
 

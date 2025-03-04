@@ -180,12 +180,83 @@ public class UserController {
         {
             response.put("success", false);
             response.put("message", validationResult.getErrorMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
         response.put("success",true);
         response.put("message", "更新完了");
 
         logger.debug("★UPDATE関数 response:"+ response);
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    //概要:ユーザー情報削除
+    @DeleteMapping("delete")
+    public ResponseEntity<Map<String,Object>> deleteUserInfo(@RequestHeader("Authorization") String idToken,
+                                                             @RequestBody Map<String, String> requestBody)
+    {
+        // JWT検証用
+        FirebaseToken firebaseToken;
+        // 返答用
+        Map<String, Object> response = new HashMap<>();
+        //引数バリデーションチェック用宣言
+        ValidationResult validationResult;
+
+        logger.debug("★idToken"+idToken);
+        logger.debug("★requestBody"+requestBody);
+
+                /* ------------------------------
+         * JWT検証
+         -------------------------------- */
+        try {
+            firebaseToken = userService.verifyJWT(idToken);
+        }catch (IllegalArgumentException e){
+            // JWT 引数エラー
+            logger.error("Invalid input: " + e.getMessage());
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } catch (RuntimeException e) {
+            // JWT 検証エラー
+            logger.error("Token verification failed: " + e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "Invalid token");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        }
+
+        /* ------------------------------
+         * JWTのuidとRequestBodyのuid比較
+         -------------------------------- */
+        if(!userService.ComparisonOfUID(firebaseToken,requestBody))
+        {
+            response.put("success", false);
+            response.put("message", "uidが一致しません");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        /* ------------------------------
+         * DBから値取得
+         -------------------------------- */
+        User user =  userService.getPersonalInfomation(firebaseToken.getUid());
+        if(user == null)
+        {
+            response.put("success", false);
+            response.put("message", "DBに登録されている値と不一致");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+        /* ------------------------------
+         * 削除処理
+         -------------------------------- */
+        ValidationResult result = userService.deleteUserInfo(user);
+
+        if (!result.isValid())
+        {
+            response.put("success",false);
+            response.put("message",result.getErrorMessage());
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+
     }
 
 }

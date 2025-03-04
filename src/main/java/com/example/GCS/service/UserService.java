@@ -123,4 +123,15 @@ public class UserService {
         }
         return ValidationResult.success();
     }
+
+    //概要: ユーザー情報削除
+    public ValidationResult deleteUserInfo(User user)
+    {
+
+        if (userRepository.existsById(user.getId())) {
+            userRepository.deleteById(user.getId());
+            return ValidationResult.success();
+        }
+        return ValidationResult.error("error","User not found");
+    }
 }

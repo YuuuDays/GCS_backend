@@ -2,6 +2,7 @@ package com.example.GCS.service;
 
 import com.example.GCS.model.User;
 import com.example.GCS.repository.UserRepository;
+import com.example.GCS.validation.ValidationResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
@@ -133,4 +134,43 @@ class UserServiceTest {
         //Assert
         assertEquals(mockUser.getGoogleId(),result.getGoogleId());
     }
+
+    //削除処理
+    @Test
+    void deleteUserInfoNormal()
+    {
+        // Arrange
+        FirebaseAuth mockFirebaseAuth = Mockito.mock(FirebaseAuth.class);
+        UserRepository mockUserRepository = Mockito.mock(UserRepository.class);
+        UserService userService = new UserService(mockFirebaseAuth,mockUserRepository);
+        User mockUser = new User();
+        mockUser.setId(1234L);
+        when(mockUserRepository.existsById(mockUser.getId())).thenReturn(true);
+
+        // Act
+        ValidationResult result = userService.deleteUserInfo(mockUser);
+        // Assert
+//        assertEquals(ValidationResult.success(), result); 同じオブジェクトじゃないとだめ
+        assertTrue(result.equals(ValidationResult.success()));
+    }
+
+    //削除処理
+    @Test
+    void deleteUserInfoArgumentError()
+    {
+        // Arrange
+        FirebaseAuth mockFirebaseAuth = Mockito.mock(FirebaseAuth.class);
+        UserRepository mockUserRepository = Mockito.mock(UserRepository.class);
+        UserService userService = new UserService(mockFirebaseAuth,mockUserRepository);
+        User mockUser = new User();
+        when(mockUserRepository.existsById(mockUser.getId())).thenReturn(false);
+        ValidationResult prediction = ValidationResult.error("error","User not found");
+
+        // Act
+        ValidationResult result = userService.deleteUserInfo(mockUser);
+
+        // Assert
+        assertTrue(result.isValid()==(prediction.isValid()));
+    }
+
 }
