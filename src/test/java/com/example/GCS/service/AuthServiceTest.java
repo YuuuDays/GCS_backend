@@ -1,6 +1,7 @@
 package com.example.GCS.service;
 
 import com.example.GCS.repository.UserRepository;
+import com.example.GCS.utils.VerifyFirebaseToken;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
@@ -24,6 +25,8 @@ class AuthServiceTest {
     private UserRepository userRepository;
     @Mock
     private FirebaseAuth firebaseAuth;
+    @Mock
+    private VerifyFirebaseToken verifyFirebaseToken;
 
     private AuthService authService;
     public static FirebaseToken mockToken;
@@ -41,7 +44,7 @@ class AuthServiceTest {
         //ここで明示するので@Mockが使える
         MockitoAnnotations.openMocks(this);
         //LoginServiveのDIとしてMockを注入
-        authService = new AuthService(userRepository,firebaseAuth);
+        authService = new AuthService(userRepository,firebaseAuth,verifyFirebaseToken);
     }
 
     @Test

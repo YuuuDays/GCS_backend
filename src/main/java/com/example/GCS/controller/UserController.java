@@ -204,7 +204,7 @@ public class UserController {
         logger.debug("★idToken"+idToken);
         logger.debug("★requestBody"+requestBody);
 
-                /* ------------------------------
+        /* ------------------------------
          * JWT検証
          -------------------------------- */
         try {
@@ -254,7 +254,8 @@ public class UserController {
             response.put("success",false);
             response.put("message",result.getErrorMessage());
         }
-
+        response.put("success", true);
+        response.put("message", "ユーザーが正常に削除されました");
         return ResponseEntity.status(HttpStatus.OK).body(response);
 
     }

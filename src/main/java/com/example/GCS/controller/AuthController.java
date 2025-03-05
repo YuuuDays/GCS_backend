@@ -36,9 +36,10 @@ public class AuthController {
      * Google認証データから新規登録or既存ユーザ(ログイン)か判断
      */
     @PostMapping("/verify-token")
-    public ResponseEntity<Map<String, Object>> verifyToken(@RequestHeader("Authorization") String idToken) {
-
-        return authService.verifyToken(idToken);
+    public ResponseEntity<Map<String, Object>> verifyToken(@RequestHeader("Authorization") String idToken)
+    {
+        authService.verifyToken(idToken);
+        return ;
     }
 
 

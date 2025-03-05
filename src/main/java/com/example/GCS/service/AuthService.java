@@ -2,6 +2,7 @@ package com.example.GCS.service;
 
 import com.example.GCS.model.User;
 import com.example.GCS.repository.UserRepository;
+import com.example.GCS.utils.VerifyFirebaseToken;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
@@ -20,17 +21,19 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final FirebaseAuth firebaseAuth;
+    private final VerifyFirebaseToken verifyFirebaseToken;
 
     private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
-    public AuthService(UserRepository userRepository, FirebaseAuth firebaseAuth) {
+    public AuthService(UserRepository userRepository, FirebaseAuth firebaseAuth, VerifyFirebaseToken verifyFirebaseToken) {
         this.userRepository = userRepository;
         this.firebaseAuth = firebaseAuth;
+        this.verifyFirebaseToken = verifyFirebaseToken;
     }
 
 
     /*
-     * Firebase→google認証UID取り出し新規登録orログイン遷移
+     * FirebaseJWTと取り出し新規登録orログイン遷移
      */
     public ResponseEntity<Map<String, Object>> verifyToken(String idToken) {
         String replaceIdToken = idToken.replace("Bearer ", "");
