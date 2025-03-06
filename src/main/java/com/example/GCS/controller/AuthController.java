@@ -2,6 +2,8 @@ package com.example.GCS.controller;
 
 import com.example.GCS.service.AuthService;
 import com.example.GCS.service.RegisterService;
+import com.example.GCS.utils.VerifyResponseBuilder;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,6 +14,7 @@ import com.example.GCS.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.RequestBody;
@@ -38,8 +41,18 @@ public class AuthController {
     @PostMapping("/verify-token")
     public ResponseEntity<Map<String, Object>> verifyToken(@RequestHeader("Authorization") String idToken)
     {
-        authService.verifyToken(idToken);
-        return ;
+        VerifyResponseBuilder responseBuilder =  authService.verifyToken(idToken);
+        //成功判定
+        if(!responseBuilder.getSuccess())
+        {
+            // - HTTP Status 401（Unauthorized）を設定
+            logger.debug("失敗->responseBuilder.build():"+responseBuilder.build());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBuilder.build());
+        }
+        //レスポンス組み立て
+        // new ResponseEntity<>(response, HttpStatus.OK);
+        logger.debug("成功->responseBuilder.build():"+responseBuilder.build());
+        return ResponseEntity.ok().body(responseBuilder.build());
     }
 
 
