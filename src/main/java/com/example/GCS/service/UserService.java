@@ -82,7 +82,7 @@ public class UserService {
     public User getPersonalInfomation(String uid)
     {
 
-        Optional<User> optionalUser = userRepository.findByGoogleId(uid);
+        Optional<User> optionalUser = userRepository.findByfirebaseUid(uid);
 
         if(optionalUser.isEmpty())
         {
@@ -100,7 +100,7 @@ public class UserService {
     {
 
         try{
-            Optional<User> optionalUser = userRepository.findByGoogleId(requestBody.get("uid"));
+            Optional<User> optionalUser = userRepository.findByfirebaseUid(requestBody.get("uid"));
             if (optionalUser.isPresent())
             {
                 User user = optionalUser.get();

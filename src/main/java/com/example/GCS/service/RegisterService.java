@@ -48,7 +48,7 @@ public class RegisterService {
 
         logger.debug("user:" + user);
         // googleIdチェック
-        if(user.getGoogleId() == null || user.getGoogleId().isEmpty())
+        if(user.getFirebaseUid() == null || user.getFirebaseUid().isEmpty())
         {
             return new ResponseBuilder()
                     .success(false)
@@ -101,7 +101,7 @@ public class RegisterService {
          * バリデーションチェック済みのモデルをDTOへ
          *------------------------------------------------------------*/
         RegisterDTO registerDTO = new RegisterDTO();
-        registerDTO.setGoogleId(user.getGoogleId());
+        registerDTO.setGoogleId(user.getFirebaseUid());
         registerDTO.setNotificationEmail(user.getNotificationEmail());
         registerDTO.setGitName(user.getGitName());
         registerDTO.setTime(user.getTime());

@@ -41,7 +41,9 @@ public class AuthController {
     @PostMapping("/verify-token")
     public ResponseEntity<Map<String, Object>> verifyToken(@RequestHeader("Authorization") String idToken)
     {
+        // JWTトークンの検証
         VerifyResponseBuilder responseBuilder =  authService.verifyToken(idToken);
+
         //成功判定
         if(!responseBuilder.getSuccess())
         {
@@ -49,12 +51,12 @@ public class AuthController {
             logger.debug("失敗->responseBuilder.build():"+responseBuilder.build());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBuilder.build());
         }
+
         //レスポンス組み立て
         // new ResponseEntity<>(response, HttpStatus.OK);
         logger.debug("成功->responseBuilder.build():"+responseBuilder.build());
         return ResponseEntity.ok().body(responseBuilder.build());
     }
-
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> registerUser(@RequestBody User user) {

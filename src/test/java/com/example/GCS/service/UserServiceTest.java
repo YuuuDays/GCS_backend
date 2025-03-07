@@ -12,7 +12,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -126,13 +125,13 @@ class UserServiceTest {
         //Arrange
         UserRepository mockUserRepository = Mockito.mock(UserRepository.class);
         User mockUser = new User();
-        mockUser.setGoogleId("1234");
-        when(mockUserRepository.findByGoogleId("uid")).thenReturn(Optional.of(mockUser));
+        mockUser.setFirebaseUid("1234");
+        when(mockUserRepository.findByfirebaseUid("uid")).thenReturn(Optional.of(mockUser));
         String uid = "1234";
         //Act
         User result = userService.getPersonalInfomation(uid);
         //Assert
-        assertEquals(mockUser.getGoogleId(),result.getGoogleId());
+        assertEquals(mockUser.getFirebaseUid(),result.getFirebaseUid());
     }
 
     //削除処理

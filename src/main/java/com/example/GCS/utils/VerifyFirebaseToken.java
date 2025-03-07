@@ -14,16 +14,14 @@ public class VerifyFirebaseToken {
     }
 
     //概要:フロンエンドのAuthorizationのJWTを検証しuidを返す
-    public String verifyFirebaseToken(String bearerToken)
+    public FirebaseToken verifyFirebaseToken(String bearerToken)
     {
         try
         {
             // JWTを検証してuidを取得
             String idToken = bearerToken.substring(7);
             FirebaseToken decodedToken = firebaseAuth.verifyIdToken(idToken);
-            String uid = decodedToken.getUid();
-
-            return uid;
+            return decodedToken;
         } catch (FirebaseAuthException e) {
             throw new RuntimeException(e);
         }

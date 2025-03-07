@@ -6,7 +6,7 @@ import java.util.Optional;
 
 public interface UserRepository extends MongoRepository<User, String> {
     //findbyxxxのxxxにはフィールド名を入れる
-    Optional<User> findByGoogleId(String googleId);
+    Optional<User> findByfirebaseUid(String googleId);
 
     // DBに登録されているメアドがないか調べる
     Optional<User> findByNotificationEmail(String notificationEmail);

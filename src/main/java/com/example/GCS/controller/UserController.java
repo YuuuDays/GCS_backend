@@ -4,7 +4,6 @@ package com.example.GCS.controller;
 import com.example.GCS.model.User;
 import com.example.GCS.service.UserService;
 import com.example.GCS.service.ValidationChecksService;
-import com.example.GCS.utils.ResponseBuilder;
 import com.example.GCS.validation.ValidationResult;
 import com.google.firebase.auth.FirebaseToken;
 import org.slf4j.Logger;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 
 // 概要:user操作に関わるコントローラー
 @RestController
@@ -89,7 +87,7 @@ public class UserController {
          * レスポンスの組み立て
          -------------------------------- */
         response.put("success", true);
-        response.put("uid",user.getGoogleId());
+        response.put("uid",user.getFirebaseUid());
         response.put("notificationEmail",user.getNotificationEmail());
         response.put("gitName",user.getGitName());
         response.put("notificationTime",user.getTime());
