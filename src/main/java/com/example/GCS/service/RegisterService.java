@@ -4,7 +4,10 @@ import com.example.GCS.dto.RegisterDTO;
 import com.example.GCS.model.User;
 import com.example.GCS.repository.RegisterRepository;
 import com.example.GCS.utils.ResponseBuilder;
+import com.example.GCS.utils.VerifyFirebaseToken;
+import com.example.GCS.utils.VerifyResponseBuilder;
 import com.example.GCS.validation.ValidationResult;
+import com.google.firebase.auth.FirebaseToken;
 import com.mongodb.MongoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,11 +24,13 @@ public class RegisterService {
 
     private final ValidationChecksService validationChecksService;
     private final RegisterRepository registerRepository;
+    private final VerifyFirebaseToken verifyFirebaseToken;
 
-    public RegisterService(ValidationChecksService validationChecksService, RegisterRepository registerRepository)
+    public RegisterService(ValidationChecksService validationChecksService, RegisterRepository registerRepository, VerifyFirebaseToken verifyFirebaseToken)
     {
         this.validationChecksService = validationChecksService;
         this.registerRepository = registerRepository;
+        this.verifyFirebaseToken = verifyFirebaseToken;
     }
     /*
      * MEMO
@@ -44,17 +49,11 @@ public class RegisterService {
                 "gitName": "GitHubユーザー名が存在しません"
          }
      */
-    public ResponseEntity<Map<String, Object>> register(User user) {
+    public ResponseBuilder register(User user, String JWTToken) {
 
         logger.debug("user:" + user);
-        // googleIdチェック
-        if(user.getFirebaseUid() == null || user.getFirebaseUid().isEmpty())
-        {
-            return new ResponseBuilder()
-                    .success(false)
-                    .addError("googleId","googleIdが不正です。もう一度最初からやり直してください")
-                    .build();
-        }
+        // UID用変数
+        String UID;
 
         /*-------------------------------------------------------------
          * メールアドレスチェック
@@ -66,10 +65,9 @@ public class RegisterService {
         if( !errorJugMail.isValid() )
         {
             logger.debug("★errorJug_mail that error is = " + errorJugMail.getErrorMessage());
-            return new ResponseBuilder()
+            return  new ResponseBuilder()
                     .success(false)
-                    .addError(errorJugMail.getField(),errorJugMail.getErrorMessage())
-                    .build();
+                    .addError(errorJugMail.getField(),errorJugMail.getErrorMessage());
         }
         /*-------------------------------------------------------------
          * GithubAccountチェック
@@ -81,8 +79,7 @@ public class RegisterService {
             logger.debug("★errorJugGithub that error is = " + errorJugGithub.getErrorMessage());
             return new ResponseBuilder()
                     .success(false)
-                    .addError(errorJugGithub.getField(),errorJugGithub.getErrorMessage())
-                    .build();
+                    .addError(errorJugGithub.getField(),errorJugGithub.getErrorMessage());
         }
         /*-------------------------------------------------------------
          * 通知時間チェック
@@ -94,14 +91,25 @@ public class RegisterService {
             logger.debug("★errorJugTime that error is = " + errorJugTime.getErrorMessage());
             return new ResponseBuilder()
                     .success(false)
-                    .addError(errorJugTime.getField(),errorJugTime.getErrorMessage())
-                    .build();
+                    .addError(errorJugTime.getField(),errorJugTime.getErrorMessage());
+        }
+        /*-------------------------------------------------------------
+         * JWT検証(本来はController呼び出し前検証済みの為不要)
+         *------------------------------------------------------------*/
+        try {
+            FirebaseToken decodedToken = verifyFirebaseToken.verifyFirebaseToken(JWTToken);
+            UID = decodedToken.getUid();
+        } catch (RuntimeException e) {
+            logger.debug("★FirebaseJWT取り出しエラー:"+e.getMessage());
+            return new ResponseBuilder()
+                    .success(false)
+                    .addError("error","JWTトークンが不正です");
         }
         /*-------------------------------------------------------------
          * バリデーションチェック済みのモデルをDTOへ
          *------------------------------------------------------------*/
         RegisterDTO registerDTO = new RegisterDTO();
-        registerDTO.setGoogleId(user.getFirebaseUid());
+        registerDTO.setFirebaseUid(UID);
         registerDTO.setNotificationEmail(user.getNotificationEmail());
         registerDTO.setGitName(user.getGitName());
         registerDTO.setTime(user.getTime());
@@ -121,14 +129,12 @@ public class RegisterService {
             logger.debug("★DB登録失敗" );
             return new ResponseBuilder()
                     .success(false)
-                    .addError("error","DB登録失敗")
-                    .build();
+                    .addError("error","DB登録失敗");
         }
         //ここに入ったら成功
         logger.debug("★DBに登録成功");
         return new ResponseBuilder()
-                .success(true)
-                .build();
+                .success(true);
     }
 
 }

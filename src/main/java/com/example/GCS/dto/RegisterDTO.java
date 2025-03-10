@@ -14,7 +14,7 @@ public class RegisterDTO {
     private String id;          // MongoDBの内部ID
     /*必須 */
     @Indexed(unique = true)     // インデックスを追加して検索を高速化
-    private String googleId;     // Googleログイン用のUID
+    private String firebaseUid;     // Googleログイン用のUID
 
     @Indexed(unique = true)     // メールアドレスも一意にする
     @Field("mail")// 通知用のメールアドレス（必須）

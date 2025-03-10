@@ -85,7 +85,6 @@ public class ValidationChecksService {
 
             // 404の場合、アカウントが存在しないと判断
             if (resCode == 404) {
-                logger.debug("★githubAccount is none");
                 return ValidationResult.error("gitName", "GitHubアカウントが存在しません");
             }
             logger.debug("★githubAccount　正常確認");

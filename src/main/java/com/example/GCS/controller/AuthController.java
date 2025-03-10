@@ -2,6 +2,7 @@ package com.example.GCS.controller;
 
 import com.example.GCS.service.AuthService;
 import com.example.GCS.service.RegisterService;
+import com.example.GCS.utils.ResponseBuilder;
 import com.example.GCS.utils.VerifyResponseBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -58,19 +59,45 @@ public class AuthController {
         return ResponseEntity.ok().body(responseBuilder.build());
     }
 
+    /**
+     * 概要: JWT+ユーザー情報を取得しヴァリデーションチェック後、登録する
+     * @param   JWTToken requestHeader内に格納されたJWT
+     * @param   user     新規登録画面のユーザーデータ
+     * @return  フロントへJSON形式で送信される
+     *            {
+     *             "notificationEmail": "通知を受け取るメールアドレス",
+     *             "gitName": "Gitのユーザー名",
+     *             "time": "希望する通知時間"
+     *             }
+     */
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> registerUser(@RequestBody User user) {
-        /*引数の説明...フロントからJSON形式で送信される
-            {
-            "googleId": "Firebase認証から取得したUID",
-            "notificationEmail": "通知を受け取るメールアドレス",
-            "gitName": "Gitのユーザー名",
-            "time": "希望する通知時間"
-            }
-        */
-        ResponseEntity<Map<String,Object>> res = registerService.register(user);
-        logger.debug("★/registerのres =" + res );
-        return res;
+    public ResponseEntity<Map<String, Object>> registerUser(@RequestHeader("Authorization") String JWTToken
+                                                            ,@RequestBody User user) {
+        logger.debug("JWTToken"+JWTToken);
+        /*-------------------------------------------------------------
+         * JWTトークンの検証
+         *------------------------------------------------------------*/
+        VerifyResponseBuilder JWTResponseBuilder =  authService.verifyToken(JWTToken);
+
+        //成功判定
+        if(!JWTResponseBuilder.getSuccess())
+        {
+            // - HTTP Status 401（Unauthorized）を設定
+            logger.debug("失敗->JWTResponseBuilder.build():"+JWTResponseBuilder.build());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(JWTResponseBuilder.build());
+        }
+        /*-------------------------------------------------------------
+         * ユーザーデータの検証
+         *------------------------------------------------------------*/
+        ResponseBuilder toFrontResponseBuilder = registerService.register(user,JWTToken);
+        // 引数異常
+        if(!toFrontResponseBuilder.getSuccess())
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(toFrontResponseBuilder.build());
+        }
+
+        logger.debug("★/registerのres =" + toFrontResponseBuilder.build() );
+        return ResponseEntity.ok(toFrontResponseBuilder.build());
 
     }
 }

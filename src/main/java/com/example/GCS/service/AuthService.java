@@ -46,13 +46,14 @@ public class AuthService {
          * 初回ログインか既存ログインか判定
          *------------------------------------------------------------*/
         Optional<User> existingUser = userRepository.findByfirebaseUid(uid);
+        logger.debug("existingUser:"+existingUser);
         if(existingUser.isEmpty())
         {
             // 初回ログイン判定
-            return new VerifyResponseBuilder().success(true).needsRegistration(true).addData("token",uid);
+            return new VerifyResponseBuilder().success(true).needsRegistration(true);
         }
         // 既存ログイン判定
-        return new VerifyResponseBuilder().success(true).needsRegistration(false).addData("token",uid);
+        return new VerifyResponseBuilder().success(true).needsRegistration(false);
 
         }
 
