@@ -165,8 +165,7 @@ public class UserController {
 
     //概要:ユーザー情報削除
     @DeleteMapping("delete")
-    public ResponseEntity<Map<String,Object>> deleteUserInfo(@RequestHeader("Authorization") String idToken,
-                                                             @RequestBody Map<String, String> requestBody)
+    public ResponseEntity<Map<String,Object>> deleteUserInfo(@RequestHeader("Authorization") String idToken)
     {
         // JWT検証用
         FirebaseToken firebaseToken;
@@ -176,7 +175,6 @@ public class UserController {
         ValidationResult validationResult;
 
         logger.debug("★idToken"+idToken);
-        logger.debug("★requestBody"+requestBody);
 
         /* ------------------------------
          * JWT検証
