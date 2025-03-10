@@ -72,11 +72,11 @@ public class UserService {
     }
 
     // 概要: 修正されたユーザー情報をDBに登録する
-    public ValidationResult amendmentRegisteration(Map<String, String> requestBody)
+    public ValidationResult amendmentRegisteration(Map<String, String> requestBody,FirebaseToken firebaseToken)
     {
 
         try{
-            Optional<User> optionalUser = userRepository.findByfirebaseUid(requestBody.get("uid"));
+            Optional<User> optionalUser = userRepository.findByfirebaseUid(firebaseToken.getUid());
             if (optionalUser.isPresent())
             {
                 User user = optionalUser.get();

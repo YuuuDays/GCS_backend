@@ -88,7 +88,7 @@ public class UserController {
     public ResponseEntity<Map<String,Object>> updateUserInfo(@RequestHeader("Authorization") String idToken,
                                                            @RequestBody Map<String, String> requestBody)
     {
-//        logger.debug("★UPDATE:idToken is " + idToken);
+        logger.debug("★UPDATE:idToken is " + idToken);
 //        logger.debug("★UPDATE:requestBody is " + requestBody);
 
         // JWT検証用
@@ -107,14 +107,14 @@ public class UserController {
             // JWT 引数エラー
             logger.error("Invalid input: " + e.getMessage());
             response.put("success", false);
-            response.put("message", e.getMessage());
+            response.put("error","エラー:ログアウト後再度ログインしてください");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         } catch (RuntimeException e) {
             // JWT 検証エラー
             logger.error("Token verification failed: " + e.getMessage());
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
-            errorResponse.put("message", "Invalid token");
+            errorResponse.put("error", "エラー:ログアウト後再度ログインしてください");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
 
@@ -149,7 +149,7 @@ public class UserController {
         /* ------------------------------
          * DBに値を登録 & 送信内容組み立て
          -------------------------------- */
-        validationResult = userService.amendmentRegisteration(requestBody);
+        validationResult = userService.amendmentRegisteration(requestBody,firebaseToken);
         if(!validationResult.isValid())
         {
             response.put("success", false);
