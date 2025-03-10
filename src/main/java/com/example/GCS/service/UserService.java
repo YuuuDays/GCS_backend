@@ -50,31 +50,7 @@ public class UserService {
         }
     }
 
-    /* 概要  : JWTのuidとRequestBodyのUID比較を検証
-     * 戻り値: true  ...第1,2引数一致
-     *        false ...第1,2引数不一致
-     */
-    public Boolean ComparisonOfUID(FirebaseToken firebaseToken, Map<String,
-                                    String> requestBody)
-    {
-        // ここにくるfirebaseTokenは検証済みのはずなので無視
-        if(requestBody == null || requestBody.isEmpty())
-        {
-            throw new IllegalArgumentException("requestBody is null or empty");
-        }
-        // キー"uid"が存在しない、または値が空文字の場合
-        if (!requestBody.containsKey("uid") || requestBody.get("uid").isEmpty()) {
-            throw new IllegalArgumentException("uid is empty or missing");
-        }
 
-        //比較
-        if(firebaseToken.getUid().equals(requestBody.get("uid")))
-        {
-            return true;
-        }
-        return false;
-
-    }
 
     /* 概要  : uidを元にDBの値を取得する
      * 戻り値: User ... uidに紐づく個人情報を取得する

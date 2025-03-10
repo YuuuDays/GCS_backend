@@ -30,13 +30,10 @@ public class UserController {
     }
 
     // 概要: ログイン後のユーザ情報表示の為の値を返す
-    @PostMapping("/info")
-    public ResponseEntity<Map<String,Object>> getUserInfo(@RequestHeader("Authorization") String idToken,
-                                                           @RequestBody Map<String, String> requestBody)
+    @GetMapping("/info")
+    public ResponseEntity<Map<String,Object>> getUserInfo(@RequestHeader("Authorization") String idToken)
     {
         logger.debug("★idToken is " + idToken);
-        logger.debug("★requestBody is " + requestBody);
-
         // JWT検証用
         FirebaseToken firebaseToken;
         // 返答用
@@ -63,23 +60,13 @@ public class UserController {
         }
 
         /* ------------------------------
-         * JWTのuidとRequestBodyのuid比較
-         -------------------------------- */
-        if(!userService.ComparisonOfUID(firebaseToken,requestBody))
-        {
-            response.put("success", false);
-            response.put("message", "uidが一致しません");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-
-        /* ------------------------------
          * DBから値取得
          -------------------------------- */
         User user =  userService.getPersonalInfomation(firebaseToken.getUid());
         if(user == null)
         {
             response.put("success", false);
-            response.put("message", "DBに登録されている値と不一致");
+            response.put("message", "ログアウト後もう一度ログインしてください");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
         logger.debug("★user is "+ user);
@@ -87,7 +74,6 @@ public class UserController {
          * レスポンスの組み立て
          -------------------------------- */
         response.put("success", true);
-        response.put("uid",user.getFirebaseUid());
         response.put("notificationEmail",user.getNotificationEmail());
         response.put("gitName",user.getGitName());
         response.put("notificationTime",user.getTime());
@@ -130,16 +116,6 @@ public class UserController {
             errorResponse.put("success", false);
             errorResponse.put("message", "Invalid token");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-        }
-
-        /* ------------------------------
-         * JWTのuidとRequestBodyのuid比較
-         -------------------------------- */
-        if(!userService.ComparisonOfUID(firebaseToken,requestBody))
-        {
-            response.put("success", false);
-            response.put("message", "uidが一致しません");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
         /* ------------------------------
@@ -220,16 +196,6 @@ public class UserController {
             errorResponse.put("success", false);
             errorResponse.put("message", "Invalid token");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-        }
-
-        /* ------------------------------
-         * JWTのuidとRequestBodyのuid比較
-         -------------------------------- */
-        if(!userService.ComparisonOfUID(firebaseToken,requestBody))
-        {
-            response.put("success", false);
-            response.put("message", "uidが一致しません");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
         /* ------------------------------
