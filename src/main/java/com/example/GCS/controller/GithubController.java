@@ -3,6 +3,7 @@ package com.example.GCS.controller;
 
 import com.example.GCS.model.User;
 import com.example.GCS.service.AuthService;
+import com.example.GCS.service.CacheService;
 import com.example.GCS.service.GithubService;
 import com.example.GCS.service.UserService;
 import com.example.GCS.utils.ResponseBuilder;
@@ -14,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 //概要:/dashBoardへ返すAPIデータ
@@ -24,13 +27,15 @@ public class GithubController {
     private final AuthService authService;
     private final GithubService githubService;
     private final UserService userService;
+    private final CacheService cacheService;
 
     private static final Logger logger = LoggerFactory.getLogger(GithubController.class);
 
-    public GithubController(AuthService authService, GithubService githubService, UserService userService) {
+    public GithubController(AuthService authService, GithubService githubService, UserService userService, CacheService cacheService) {
         this.authService = authService;
         this.githubService = githubService;
         this.userService = userService;
+        this.cacheService = cacheService;
     }
 
     /**
@@ -49,7 +54,7 @@ public class GithubController {
     public ResponseEntity<Map<String, Object>> getGitHubData(@RequestHeader("Authorization") String JWTToken,
                                                              @RequestParam String clientTimeStamp) {
         // response用
-
+        Map<String,Object> responseBody;
         /*-------------------------------------------------------------
          * JWTトークンの検証
          *------------------------------------------------------------*/
@@ -82,7 +87,26 @@ public class GithubController {
         /*-------------------------------------------------------------
          *   githubNameを元にgitHubAPIを叩くorキャッシュからデータを取得
          *------------------------------------------------------------*/
+        // キャッシュデータを取得
+        Map<String, Object> cachedData = cacheService.getCache(user.getGitName());
+        LocalDateTime clientTime  = githubService.parseToLocalDateTime(clientTimeStamp);
 
+        // redisキャッシュがある場合
+        if (cachedData != null)
+        {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+            LocalDateTime cacheTime = LocalDateTime.parse(cachedData.get("timestamp").toString(), formatter);
+
+            if (cacheTime.plusMinutes(5).isAfter(clientTime)) {
+                return ResponseEntity.ok().body(cachedData);
+            }
+        }
+
+        // 5分以上経過 or キャッシュなしならGitHub APIを取得
+        Map<String, Object> newData = githubService.fetchGitHubData(user.getGitName());
+        newData.put("timestamp", clientTime); // キャッシュの時間を保存
+        cacheService.setCache(user.getGitName(), newData);
+        return newData;
         // レスポンスデータを返す
 
         return ResponseEntity.ok().build();

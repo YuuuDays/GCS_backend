@@ -1,9 +1,12 @@
 package com.example.GCS.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.web.client.RestTemplate;
+
 import java.time.LocalDateTime;
 
 
@@ -13,12 +16,15 @@ class GithubServiceTest {
 
     @Mock
     private GithubService githubService;
-
+    @Mock
+    private  RestTemplate restTemplate;
+    @Mock
+    private ObjectMapper objectMapper;
     @BeforeEach
     void setUp()
     {
         MockitoAnnotations.openMocks(this);
-        githubService = new GithubService();
+        githubService = new GithubService(restTemplate,objectMapper);
     }
 
     @Test
