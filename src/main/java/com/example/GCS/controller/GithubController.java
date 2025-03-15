@@ -1,16 +1,18 @@
 package com.example.GCS.controller;
 
 
+import com.example.GCS.model.User;
 import com.example.GCS.service.AuthService;
+import com.example.GCS.service.GithubService;
+import com.example.GCS.service.UserService;
+import com.example.GCS.utils.ResponseBuilder;
 import com.example.GCS.utils.VerifyResponseBuilder;
+import com.google.firebase.auth.FirebaseToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -20,10 +22,15 @@ import java.util.Map;
 public class GithubController {
 
     private final AuthService authService;
+    private final GithubService githubService;
+    private final UserService userService;
+
     private static final Logger logger = LoggerFactory.getLogger(GithubController.class);
 
-    public GithubController(AuthService authService) {
+    public GithubController(AuthService authService, GithubService githubService, UserService userService) {
         this.authService = authService;
+        this.githubService = githubService;
+        this.userService = userService;
     }
 
     /**
@@ -39,7 +46,10 @@ public class GithubController {
      *             }
      */
     @GetMapping("/userDate")
-    public ResponseEntity<Map<String, Object>> getGitHubData(@RequestHeader("Authorization") String JWTToken) {
+    public ResponseEntity<Map<String, Object>> getGitHubData(@RequestHeader("Authorization") String JWTToken,
+                                                             @RequestParam String clientTimeStamp) {
+        // response用
+
         /*-------------------------------------------------------------
          * JWTトークンの検証
          *------------------------------------------------------------*/
@@ -52,8 +62,27 @@ public class GithubController {
             logger.debug("失敗->JWTResponseBuilder.build():"+JWTResponseBuilder.build());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(JWTResponseBuilder.build());
         }
-        // DBからgithubNameを取得
-        // githubNameを元にgithubapiを叩くorキャッシュからデータを取得
+        /*-------------------------------------------------------------
+         *  DBからgithubNameを取得
+         *------------------------------------------------------------*/
+        // JWTからFirebaseTokenを取得
+        FirebaseToken firebaseToken = userService.verifyJWT(JWTToken);
+        if(firebaseToken == null || firebaseToken.getUid() == null)
+        {
+            Map<String,Object> response = new VerifyResponseBuilder().success(false).addError("DBにデータが存在しません。ログインし直してください").build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        // FirebaseToken→uidからDBのuserデータを取得
+        User user = userService.getPersonalInfomation(firebaseToken.getUid());
+        if(user == null)
+        {
+            Map<String,Object> response = new VerifyResponseBuilder().success(false).addError("DBにデータが存在しません。ログインし直してください").build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        /*-------------------------------------------------------------
+         *   githubNameを元にgitHubAPIを叩くorキャッシュからデータを取得
+         *------------------------------------------------------------*/
+
         // レスポンスデータを返す
 
         return ResponseEntity.ok().build();

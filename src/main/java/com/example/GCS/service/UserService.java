@@ -52,8 +52,9 @@ public class UserService {
 
 
 
-    /* 概要  : uidを元にDBの値を取得する
-     * 戻り値: User ... uidに紐づく個人情報を取得する
+    /** 概要  : uidを元にDBの値を取得する
+     * @param uid uidに紐づく個人情報を取得する
+     * @return User DBから取得したuser情報
      */
     public User getPersonalInfomation(String uid)
     {
