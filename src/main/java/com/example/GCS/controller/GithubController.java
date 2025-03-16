@@ -6,6 +6,7 @@ import com.example.GCS.service.AuthService;
 import com.example.GCS.service.GithubService;
 import com.example.GCS.service.UserService;
 import com.example.GCS.utils.VerifyResponseBuilder;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.firebase.auth.FirebaseToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,11 +85,16 @@ public class GithubController {
         /*-------------------------------------------------------------
          *   githubNameを元にgitHubAPIを叩く
          *------------------------------------------------------------*/
-
-
-        logger.debug("kokomade kita");
-        githubService.fetchGitHubData(user.getGitName());
-
+        String response   = githubService.fetchGitHubData(user.getGitName());
+        JsonNode jsonNode = githubService.StringToJSON(response);
+        if(response.isEmpty() || jsonNode.isEmpty())
+        {
+            Map<String,Object> responseAPIError = new VerifyResponseBuilder().success(false).addError("データ取得に失敗しました、時間をおいてアクセスを試してください").build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseAPIError);
+        }
+        // (一番最新の)コミットされたリポジトリを取得
+        JsonNode latestCommitRepository = githubService.getTheDayofTheMostMomentCommit(jsonNode);
+        logger.debug("latestCommitRepository:"+latestCommitRepository);
         // 5分以上経過 or キャッシュなしならGitHub APIを取得
 //        Map<String, Object> newData = githubService.fetchGitHubData(user.getGitName());
 //        newData.put("timestamp", clientTime); // キャッシュの時間を保存
