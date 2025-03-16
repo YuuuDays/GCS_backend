@@ -35,12 +35,10 @@ public class GithubService {
 
 
     private static final Logger logger = LoggerFactory.getLogger(GithubService.class);
-    private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final String githubToken = EnvConfig.getGithubToken();;
 
-
-    public GithubService(RestTemplate restTemplate, ObjectMapper objectMapper) {
-        this.restTemplate = restTemplate;
+    public GithubService( ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
@@ -70,7 +68,7 @@ public class GithubService {
      * 異常の場合　null
      */
     public String fetchGitHubData(String username) {
-        String githubToken = EnvConfig.getGithubToken();
+//        String githubToken = EnvConfig.getGithubToken();
         logger.debug("GITHUB_TOKEN:" + githubToken);
 
         /*-------------------------------------------------------------
@@ -195,9 +193,41 @@ public class GithubService {
 
 
     // 概要:一番最新のレポジトリの言語使用率取得
-//    public Map<String, Object> getLatestRepositoryLanguageRatio(JsonNode jsonNode) {
-//
-//    }
+    public Map<String, Object> getLatestRepositoryLanguageRatio(JsonNode jsonNode)
+    {
+        Map<String, Object> response = new HashMap<>();
+        String languagesUr = jsonNode.get("languages_url").asText();
+
+        // HTTP ヘッダー設定
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "token " + githubToken);
+        headers.set("Accept", "application/vnd.github.v3+json");
+
+        // HTTP エンティティ作成
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        // HTTP リクエストを送信するためのクライアント
+        RestTemplate restTemplate = new RestTemplate();
+        // GitHub API からリポジトリ一覧を取得
+        try {
+            ResponseEntity<String> repoResponse = restTemplate.exchange(languagesUr, HttpMethod.GET, entity, String.class);
+            String responseBody = repoResponse.getBody();
+
+            // JSONに変換
+            JsonNode responseJsonNode  = StringToJSON(responseBody);
+
+            // JsonNode を Map<String, Object> に変換
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, Object> resultMap = objectMapper.convertValue(responseJsonNode, Map.class);
+
+            logger.debug("★★resultMap:"+resultMap);
+
+            return  resultMap;
+        } catch (RestClientException e) {
+            logger.error("Error:" + e.getMessage());
+            return null;
+        }
+
+    }
 
     //概要:一週間のコミット履歴
     public boolean[] getWeeklyCommitRate(ResponseEntity<String> eventResponse) {
