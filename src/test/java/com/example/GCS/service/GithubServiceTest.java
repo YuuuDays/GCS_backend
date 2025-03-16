@@ -20,11 +20,14 @@ class GithubServiceTest {
     private  RestTemplate restTemplate;
     @Mock
     private ObjectMapper objectMapper;
+    @Mock
+    String githubToken;
+
     @BeforeEach
-    void setUp()
+    public void setUp()
     {
         MockitoAnnotations.openMocks(this);
-        githubService = new GithubService(restTemplate,objectMapper);
+        githubService = new GithubService(restTemplate,objectMapper,githubToken);
     }
 
     @Test
