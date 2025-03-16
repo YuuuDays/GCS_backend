@@ -14,8 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 //概要:/dashBoardへ返すAPIデータ
@@ -65,6 +63,7 @@ public class GithubController {
             logger.debug("失敗->JWTResponseBuilder.build():"+JWTResponseBuilder.build());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(JWTResponseBuilder.build());
         }
+
         /*-------------------------------------------------------------
          *  DBからgithubNameを取得
          *------------------------------------------------------------*/
@@ -82,6 +81,7 @@ public class GithubController {
             Map<String,Object> response = new VerifyResponseBuilder().success(false).addError("DBにデータが存在しません。ログインし直してください").build();
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
+
         /*-------------------------------------------------------------
          *   githubNameを元にgitHubAPIを叩く
          *------------------------------------------------------------*/
@@ -93,13 +93,11 @@ public class GithubController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseAPIError);
         }
         // (一番最新の)コミットされたリポジトリを取得
-        JsonNode latestCommitRepository = githubService.getTheDayofTheMostMomentCommit(jsonNode);
+        JsonNode latestCommitRepository = githubService.getTheDayOfTheMostMomentCommit(jsonNode);
         logger.debug("latestCommitRepository:"+latestCommitRepository);
-        // 5分以上経過 or キャッシュなしならGitHub APIを取得
-//        Map<String, Object> newData = githubService.fetchGitHubData(user.getGitName());
-//        newData.put("timestamp", clientTime); // キャッシュの時間を保存
-//        cacheService.setCache(user.getGitName(), newData);
-//        return newData;
+        // 今日のコミットがあるかどうか
+        boolean isTodayCommit = githubService.getTodayCommit(latestCommitRepository);
+        logger.debug("今日のコミットの結果="+isTodayCommit);
         // レスポンスデータを返す
 
         return ResponseEntity.ok().build();

@@ -1,11 +1,9 @@
 package com.example.GCS.service;
 
 import com.example.GCS.config.EnvConfig;
-import com.example.GCS.utils.ResponseBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.api.client.util.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
@@ -19,6 +17,8 @@ import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
 
@@ -115,8 +115,12 @@ public class GithubService {
         return null; // エラーが発生した場合はnullを返す
     }
 
-    // 概要:最後にコミットされたレポジトリの日付
-    public JsonNode getTheDayofTheMostMomentCommit(JsonNode jsonNode)
+    /**
+     * 概要 : GitHubAPIから取得したレポジトリ一覧から最後にコミットしたレポジトリを返す
+     * @param jsonNode ...レポジトリ一覧
+     * @return JsonNode ...最後にコミットしたレポジトリを格納
+     */
+    public JsonNode getTheDayOfTheMostMomentCommit(JsonNode jsonNode)
     {
         // 最新のプッシュ日時を探す
         JsonNode latestRepo = null;
@@ -125,9 +129,10 @@ public class GithubService {
 
         for (JsonNode repo : jsonNode) {
             String pushedAtStr = repo.get("pushed_at").asText();
+            //logger.debug("★pushedAtStr:"+pushedAtStr);
             try {
                 pushedAt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(pushedAtStr);
-
+                //logger.debug("★pushedAt:"+pushedAt);
             } catch (Exception e) {
                 logger.error("Data format conversion error:" + e.getMessage());
                 return null;
@@ -141,6 +146,53 @@ public class GithubService {
         }
         return latestRepo;
     }
+
+    /**
+     * 概要 : 引数で受け取った(最新)レポジトリから今日のコミットがあるかどうか調べる
+     * @param jsonNode ...最新のレポジトリ
+     * @return boolean ...今日のコミットが　有る(true)/無し(false)
+     */
+    public boolean getTodayCommit(JsonNode jsonNode)
+    {
+        Date pushedAt;
+        Date isToday;
+        String formattedDate;
+
+        // 最新の日付を取得
+        String pushedAtStr = jsonNode.get("pushed_at").asText();
+        logger.debug("★レポジトリ単体から取得(UTC):"+pushedAtStr);
+        try {
+            // UTCの日付文字列をDateオブジェクトに変換
+            SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+            utcFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+            pushedAt = utcFormat.parse(pushedAtStr);
+
+            // 日本時間にフォーマット
+            SimpleDateFormat jstFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+            jstFormat.setTimeZone(java.util.TimeZone.getTimeZone("Asia/Tokyo"));
+            formattedDate = jstFormat.format(pushedAt);
+
+            logger.debug("★レポジトリ単体の時間を日本時間へ:" + formattedDate);
+
+            // 与えられた日付をLocalDateに変換
+            String datePart = formattedDate.substring(0, 10);
+            String datePartAndFormat = datePart.replace("/", "-");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            LocalDate inputDate = LocalDate.parse(datePartAndFormat, formatter);
+
+            // 今日の日付を取得
+            LocalDate today = LocalDate.now();
+            logger.debug("★inputDate:★today:" +inputDate +":"+ today);
+
+            // 日付を比較
+            return inputDate.equals(today);
+
+        } catch (Exception e) {
+            logger.error("Data format conversion error:" + e.getMessage());
+            return false;
+        }
+    }
+
 
     // 概要:一番最新のレポジトリの言語使用率取得
 //    public Map<String, Object> getLatestRepositoryLanguageRatio(JsonNode jsonNode) {
