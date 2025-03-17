@@ -39,20 +39,22 @@ public class GithubController {
     }
 
     /**
-     * 概要: JWT+ユーザー情報を取得しヴァリデーションチェック後、登録する
-     *
+     * 概要: JWT検証後、非同期で値を取得
      * @param JWTToken requestHeader内に格納されたJWT
      * @return フロントへJSON形式で送信される
      * {
-     * "languageUsage": "(ユーザの公開レポジトリにあるすべての)言語使用率",
      * "isCommitToday": "今日のコミットの有無",
+     * "languageUsage": "(ユーザの公開レポジトリにあるすべての)言語使用率",
      * "weeklyCommitRate": "1週間のコミット率",
      * }
      */
     @GetMapping("/userDate")
-    public ResponseEntity<Map<String, Object>> getGitHubData(@RequestHeader("Authorization") String JWTToken,
-                                                             @RequestParam String clientTimeStamp) {
-        // response用
+    public DeferredResult<ResponseEntity<Map<String, Object>>> getGitHubData(@RequestHeader("Authorization") String JWTToken,
+                                                                             @RequestParam String clientTimeStamp) {
+        // 非同期レスポンス用の DeferredResult を作成
+        DeferredResult<ResponseEntity<Map<String, Object>>> deferredResult = new DeferredResult<>();
+
+        //　レスポンス用の Map を作成
         Map<String, Object> responseUserRepositoryDate = new HashMap<>();
 
         /*-------------------------------------------------------------
@@ -60,84 +62,81 @@ public class GithubController {
          *------------------------------------------------------------*/
         VerifyResponseBuilder JWTResponseBuilder = authService.verifyToken(JWTToken);
 
-        //成功判定
         if (!JWTResponseBuilder.getSuccess()) {
-            // - HTTP Status 401（Unauthorized）を設定
             logger.debug("失敗->JWTResponseBuilder.build():" + JWTResponseBuilder.build());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(JWTResponseBuilder.build());
+            deferredResult.setResult(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(JWTResponseBuilder.build()));
+            return deferredResult;
         }
 
         /*-------------------------------------------------------------
-         *  DBからgithubNameを取得
+         * DBからgithubNameを取得
          *------------------------------------------------------------*/
-        // JWTからFirebaseTokenを取得
         FirebaseToken firebaseToken = userService.verifyJWT(JWTToken);
         if (firebaseToken == null || firebaseToken.getUid() == null) {
             Map<String, Object> response = new VerifyResponseBuilder().success(false).addError("DBにデータが存在しません。ログインし直してください").build();
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            deferredResult.setResult(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response));
+            return deferredResult;
         }
-        // FirebaseToken→uidからDBのuserデータを取得
+
         User user = userService.getPersonalInfomation(firebaseToken.getUid());
         if (user == null) {
             Map<String, Object> response = new VerifyResponseBuilder().success(false).addError("DBにデータが存在しません。ログインし直してください").build();
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            deferredResult.setResult(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response));
+            return deferredResult;
         }
 
         /*-------------------------------------------------------------
-         *   githubNameを元にgitHubAPIを叩く(同期)
+         * githubNameを元にgitHubAPIを叩く(同期)
          *------------------------------------------------------------*/
         String response = githubService.fetchGitHubData(user.getGitName());
         JsonNode jsonNode = githubService.StringToJSON(response);
+
         if (response.isEmpty() || jsonNode.isEmpty()) {
             Map<String, Object> responseAPIError = new VerifyResponseBuilder().success(false).addError("データ取得に失敗しました、時間をおいてアクセスを試してください").build();
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseAPIError);
+            deferredResult.setResult(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseAPIError));
+            return deferredResult;
         }
+
         /*-------------------------------------------------------------
-         *  1週間文のレポジトリ取得(非同期)
+         * 一週間分のレポジトリ取得(非同期)
          *------------------------------------------------------------*/
-        DeferredResult<Boolean[]> result = new DeferredResult<>();
-
         githubService.getWeeklyCommitRateAsync(user.getGitName())
-                .doOnSuccess(contributions -> logger.debug("★ サービスからの非同期結果: " + Arrays.toString(contributions)))
-                .doOnError(error -> logger.error("★ 非同期処理でエラー発生", error))
-                .subscribe(result::setResult, result::setErrorResult);
-//        .subscribe(contributions -> result.setResult(contributions),
-//                error -> result.setErrorResult(error));
+                .doOnSuccess(contributions -> {
+                    logger.debug("★ サービスからの非同期結果: " + Arrays.toString(contributions));
+                    responseUserRepositoryDate.put("weeklyCommitRate", contributions);
+                })
+                .doOnError(error -> {
+                    logger.error("★ 非同期処理でエラー発生", error);
+                    responseUserRepositoryDate.put("weeklyCommitRate", null);
+                })
+                .doFinally(signal -> {
+                    // 非同期処理が終わったら Map に値をセットして ResponseEntity を返す
+                    logger.debug("★★★非同期処理終わりセットdata:"+responseUserRepositoryDate);
+                    deferredResult.setResult(ResponseEntity.ok(responseUserRepositoryDate));
+                })
+                .subscribe();
 
         /*-------------------------------------------------------------
-         *   (一番最新の)コミットされたリポジトリを取得
+         * (一番最新の)コミットされたリポジトリを取得
          *------------------------------------------------------------*/
         JsonNode latestCommitRepository = githubService.getTheDayOfTheMostMomentCommit(jsonNode);
         logger.debug("latestCommitRepository:" + latestCommitRepository);
 
         /*-------------------------------------------------------------
-         *   今日のコミットがあるかどうか
+         * 今日のコミットがあるかどうか
          *------------------------------------------------------------*/
         boolean isTodayCommit = githubService.getTodayCommit(latestCommitRepository);
         logger.debug("今日のコミットの結果=" + isTodayCommit);
-        responseUserRepositoryDate.put("isCommitToday",isTodayCommit);
+        responseUserRepositoryDate.put("isCommitToday", isTodayCommit);
 
         /*-------------------------------------------------------------
-         *   最新リポジトリの言語使用率を取得
+         * 最新リポジトリの言語使用率を取得
          *------------------------------------------------------------*/
         Map<String, Object> userOfLatestRepositoryLanguageRatio = githubService.getLatestRepositoryLanguageRatio(latestCommitRepository);
-        responseUserRepositoryDate.put("languageUsage",userOfLatestRepositoryLanguageRatio);
+        responseUserRepositoryDate.put("languageUsage", userOfLatestRepositoryLanguageRatio);
 
-        /*-------------------------------------------------------------
-         *   レスポンスを返す(非同期対応)
-         *------------------------------------------------------------*/
-        // result に値が入ったら userOfWeeklyRepository に格納(一週間のcommit履歴)
-        result.onCompletion(() -> {
-            Boolean[] contributions = (Boolean[]) result.getResult();
-            if (contributions != null) {
-                responseUserRepositoryDate.put("weeklyCommitRate", contributions);
-                logger.debug("★ weeklyCommit にセットしました: " + Arrays.toString(contributions));
-            } else {
-                logger.warn("★ weeklyCommit にセットできませんでした (null 値)");
-            }
-        });
-
-
-        return ResponseEntity.ok().build();
+        //  非同期処理の完了を待ち、レスポンスを返す
+        return deferredResult;
     }
+
 }
