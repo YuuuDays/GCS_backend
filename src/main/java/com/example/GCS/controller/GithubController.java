@@ -13,9 +13,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.async.DeferredResult;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 //概要:/dashBoardへ返すAPIデータ
 @RestController
@@ -52,6 +54,8 @@ public class GithubController {
                                                              @RequestParam String clientTimeStamp) {
         // response用
         Map<String, Object> LatestRepositoryLanguageRatio;
+
+
         /*-------------------------------------------------------------
          * JWTトークンの検証
          *------------------------------------------------------------*/
@@ -93,9 +97,13 @@ public class GithubController {
          *  1週間文のレポジトリ取得(非同期)
          *------------------------------------------------------------*/
         //boolean[] weeklyCommitRate = githubService.getWeeklyCommitRate(user.getGitName());
-        githubService.getWeeklyCommitRateAsync(user.getGitName()).subscribe(contributions -> {
-            System.out.println("今週の貢献状況: " + Arrays.toString(contributions));
-        });
+
+        DeferredResult<Boolean[]> result = new DeferredResult<>();
+
+        githubService.getWeeklyCommitRateAsync(user.getGitName())
+                .doOnSuccess(contributions -> logger.debug("★ サービスからの非同期結果: " + Arrays.toString(contributions)))
+                .doOnError(error -> logger.error("★ 非同期処理でエラー発生", error))
+                .subscribe(result::setResult, result::setErrorResult);
         /*-------------------------------------------------------------
          *   (一番最新の)コミットされたリポジトリを取得
          *------------------------------------------------------------*/
