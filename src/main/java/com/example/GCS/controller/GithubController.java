@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.async.DeferredResult;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -46,15 +47,13 @@ public class GithubController {
      * "languageUsage": "(ユーザの公開レポジトリにあるすべての)言語使用率",
      * "isCommitToday": "今日のコミットの有無",
      * "weeklyCommitRate": "1週間のコミット率",
-     * "monthlyCommitRate": "一ヶ月のコミット率",
      * }
      */
     @GetMapping("/userDate")
     public ResponseEntity<Map<String, Object>> getGitHubData(@RequestHeader("Authorization") String JWTToken,
                                                              @RequestParam String clientTimeStamp) {
         // response用
-        Map<String, Object> LatestRepositoryLanguageRatio;
-
+        Map<String, Object> responseUserRepositoryDate = new HashMap<>();
 
         /*-------------------------------------------------------------
          * JWTトークンの検証
@@ -96,8 +95,6 @@ public class GithubController {
         /*-------------------------------------------------------------
          *  1週間文のレポジトリ取得(非同期)
          *------------------------------------------------------------*/
-        //boolean[] weeklyCommitRate = githubService.getWeeklyCommitRate(user.getGitName());
-
         DeferredResult<Boolean[]> result = new DeferredResult<>();
 
         githubService.getWeeklyCommitRateAsync(user.getGitName())
@@ -107,7 +104,6 @@ public class GithubController {
 //        .subscribe(contributions -> result.setResult(contributions),
 //                error -> result.setErrorResult(error));
 
-        logger.debug("本当に入ってる？="+ result);
         /*-------------------------------------------------------------
          *   (一番最新の)コミットされたリポジトリを取得
          *------------------------------------------------------------*/
@@ -119,12 +115,27 @@ public class GithubController {
          *------------------------------------------------------------*/
         boolean isTodayCommit = githubService.getTodayCommit(latestCommitRepository);
         logger.debug("今日のコミットの結果=" + isTodayCommit);
+        responseUserRepositoryDate.put("isCommitToday",isTodayCommit);
 
         /*-------------------------------------------------------------
          *   最新リポジトリの言語使用率を取得
          *------------------------------------------------------------*/
-        LatestRepositoryLanguageRatio = githubService.getLatestRepositoryLanguageRatio(latestCommitRepository);
-        // レスポンスデータを返す
+        Map<String, Object> userOfLatestRepositoryLanguageRatio = githubService.getLatestRepositoryLanguageRatio(latestCommitRepository);
+        responseUserRepositoryDate.put("languageUsage",userOfLatestRepositoryLanguageRatio);
+
+        /*-------------------------------------------------------------
+         *   レスポンスを返す(非同期対応)
+         *------------------------------------------------------------*/
+        // result に値が入ったら userOfWeeklyRepository に格納(一週間のcommit履歴)
+        result.onCompletion(() -> {
+            Boolean[] contributions = (Boolean[]) result.getResult();
+            if (contributions != null) {
+                responseUserRepositoryDate.put("weeklyCommitRate", contributions);
+                logger.debug("★ weeklyCommit にセットしました: " + Arrays.toString(contributions));
+            } else {
+                logger.warn("★ weeklyCommit にセットできませんでした (null 値)");
+            }
+        });
 
 
         return ResponseEntity.ok().build();
