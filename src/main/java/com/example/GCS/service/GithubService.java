@@ -1,6 +1,6 @@
 package com.example.GCS.service;
 
-import com.example.GCS.component.GitHubGraphQLClient;
+import com.example.GCS.utils.GitHubGraphQLClient;
 import com.example.GCS.config.EnvConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -17,15 +17,12 @@ import org.springframework.web.client.RestTemplate;
 import reactor.core.publisher.Mono;
 
 import java.time.temporal.TemporalAdjusters;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 
 import java.time.format.DateTimeParseException;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.stream.Collectors;
 
 // 概要:githubのデータを取得するクラス
 @Service
@@ -240,6 +237,7 @@ public class GithubService {
                 .map(result -> processContributions(result)); // 非同期のまま処理
     }
 
+    //概要:一週間のコミット履歴の計算ロジック
     private Boolean[] processContributions(Map<String, Object> result) {
         Boolean[] contributionsWeek = new Boolean[7];
         logger.debug("★★★result:" + result);

@@ -1,4 +1,4 @@
-package com.example.GCS.component;
+package com.example.GCS.utils;
 
 import com.example.GCS.config.EnvConfig;
 import org.springframework.core.ParameterizedTypeReference;
