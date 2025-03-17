@@ -104,6 +104,10 @@ public class GithubController {
                 .doOnSuccess(contributions -> logger.debug("★ サービスからの非同期結果: " + Arrays.toString(contributions)))
                 .doOnError(error -> logger.error("★ 非同期処理でエラー発生", error))
                 .subscribe(result::setResult, result::setErrorResult);
+//        .subscribe(contributions -> result.setResult(contributions),
+//                error -> result.setErrorResult(error));
+
+        logger.debug("本当に入ってる？="+ result);
         /*-------------------------------------------------------------
          *   (一番最新の)コミットされたリポジトリを取得
          *------------------------------------------------------------*/
