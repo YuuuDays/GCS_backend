@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.Map;
 
 //概要:/dashBoardへ返すAPIデータ
@@ -36,30 +37,30 @@ public class GithubController {
 
     /**
      * 概要: JWT+ユーザー情報を取得しヴァリデーションチェック後、登録する
-     * @param   JWTToken requestHeader内に格納されたJWT
-     * @return  フロントへJSON形式で送信される
-     *            {
-     *             "languageUsage": "(ユーザの公開レポジトリにあるすべての)言語使用率",
-     *             "isCommitToday": "今日のコミットの有無",
-     *             "weeklyCommitRate": "1週間のコミット率",
-     *             "monthlyCommitRate": "一ヶ月のコミット率",
-     *             }
+     *
+     * @param JWTToken requestHeader内に格納されたJWT
+     * @return フロントへJSON形式で送信される
+     * {
+     * "languageUsage": "(ユーザの公開レポジトリにあるすべての)言語使用率",
+     * "isCommitToday": "今日のコミットの有無",
+     * "weeklyCommitRate": "1週間のコミット率",
+     * "monthlyCommitRate": "一ヶ月のコミット率",
+     * }
      */
     @GetMapping("/userDate")
     public ResponseEntity<Map<String, Object>> getGitHubData(@RequestHeader("Authorization") String JWTToken,
                                                              @RequestParam String clientTimeStamp) {
         // response用
-        Map<String,Object> LatestRepositoryLanguageRatio;
+        Map<String, Object> LatestRepositoryLanguageRatio;
         /*-------------------------------------------------------------
          * JWTトークンの検証
          *------------------------------------------------------------*/
-        VerifyResponseBuilder JWTResponseBuilder =  authService.verifyToken(JWTToken);
+        VerifyResponseBuilder JWTResponseBuilder = authService.verifyToken(JWTToken);
 
         //成功判定
-        if(!JWTResponseBuilder.getSuccess())
-        {
+        if (!JWTResponseBuilder.getSuccess()) {
             // - HTTP Status 401（Unauthorized）を設定
-            logger.debug("失敗->JWTResponseBuilder.build():"+JWTResponseBuilder.build());
+            logger.debug("失敗->JWTResponseBuilder.build():" + JWTResponseBuilder.build());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(JWTResponseBuilder.build());
         }
 
@@ -68,41 +69,44 @@ public class GithubController {
          *------------------------------------------------------------*/
         // JWTからFirebaseTokenを取得
         FirebaseToken firebaseToken = userService.verifyJWT(JWTToken);
-        if(firebaseToken == null || firebaseToken.getUid() == null)
-        {
-            Map<String,Object> response = new VerifyResponseBuilder().success(false).addError("DBにデータが存在しません。ログインし直してください").build();
+        if (firebaseToken == null || firebaseToken.getUid() == null) {
+            Map<String, Object> response = new VerifyResponseBuilder().success(false).addError("DBにデータが存在しません。ログインし直してください").build();
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
         // FirebaseToken→uidからDBのuserデータを取得
         User user = userService.getPersonalInfomation(firebaseToken.getUid());
-        if(user == null)
-        {
-            Map<String,Object> response = new VerifyResponseBuilder().success(false).addError("DBにデータが存在しません。ログインし直してください").build();
+        if (user == null) {
+            Map<String, Object> response = new VerifyResponseBuilder().success(false).addError("DBにデータが存在しません。ログインし直してください").build();
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
         /*-------------------------------------------------------------
-         *   githubNameを元にgitHubAPIを叩く
+         *   githubNameを元にgitHubAPIを叩く(同期)
          *------------------------------------------------------------*/
-        String response   = githubService.fetchGitHubData(user.getGitName());
+        String response = githubService.fetchGitHubData(user.getGitName());
         JsonNode jsonNode = githubService.StringToJSON(response);
-        if(response.isEmpty() || jsonNode.isEmpty())
-        {
-            Map<String,Object> responseAPIError = new VerifyResponseBuilder().success(false).addError("データ取得に失敗しました、時間をおいてアクセスを試してください").build();
+        if (response.isEmpty() || jsonNode.isEmpty()) {
+            Map<String, Object> responseAPIError = new VerifyResponseBuilder().success(false).addError("データ取得に失敗しました、時間をおいてアクセスを試してください").build();
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseAPIError);
         }
-
+        /*-------------------------------------------------------------
+         *  1週間文のレポジトリ取得(非同期)
+         *------------------------------------------------------------*/
+        //boolean[] weeklyCommitRate = githubService.getWeeklyCommitRate(user.getGitName());
+        githubService.getWeeklyCommitRateAsync(user.getGitName()).subscribe(contributions -> {
+            System.out.println("今週の貢献状況: " + Arrays.toString(contributions));
+        });
         /*-------------------------------------------------------------
          *   (一番最新の)コミットされたリポジトリを取得
          *------------------------------------------------------------*/
         JsonNode latestCommitRepository = githubService.getTheDayOfTheMostMomentCommit(jsonNode);
-        logger.debug("latestCommitRepository:"+latestCommitRepository);
+        logger.debug("latestCommitRepository:" + latestCommitRepository);
 
         /*-------------------------------------------------------------
          *   今日のコミットがあるかどうか
          *------------------------------------------------------------*/
         boolean isTodayCommit = githubService.getTodayCommit(latestCommitRepository);
-        logger.debug("今日のコミットの結果="+isTodayCommit);
+        logger.debug("今日のコミットの結果=" + isTodayCommit);
 
         /*-------------------------------------------------------------
          *   最新リポジトリの言語使用率を取得

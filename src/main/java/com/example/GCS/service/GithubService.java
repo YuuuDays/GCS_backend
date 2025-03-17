@@ -1,5 +1,6 @@
 package com.example.GCS.service;
 
+import com.example.GCS.component.GitHubGraphQLClient;
 import com.example.GCS.config.EnvConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -13,14 +14,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-
+import reactor.core.publisher.Mono;
+import java.time.temporal.TemporalAdjusters;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.time.LocalDateTime;
 
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
@@ -36,10 +35,12 @@ public class GithubService {
 
     private static final Logger logger = LoggerFactory.getLogger(GithubService.class);
     private final ObjectMapper objectMapper;
-    private final String githubToken = EnvConfig.getGithubToken();;
+    private final GitHubGraphQLClient gitHubGraphQLClient;
+    private final String githubToken = EnvConfig.getGithubToken();
 
-    public GithubService( ObjectMapper objectMapper) {
+    public GithubService(ObjectMapper objectMapper, GitHubGraphQLClient gitHubGraphQLClient) {
         this.objectMapper = objectMapper;
+        this.gitHubGraphQLClient = gitHubGraphQLClient;
     }
 
     /**
@@ -220,7 +221,6 @@ public class GithubService {
             Map<String, Object> resultMap = objectMapper.convertValue(responseJsonNode, Map.class);
 
             logger.debug("★★resultMap:"+resultMap);
-
             return  resultMap;
         } catch (RestClientException e) {
             logger.error("Error:" + e.getMessage());
@@ -230,39 +230,75 @@ public class GithubService {
     }
 
     //概要:一週間のコミット履歴
-    public boolean[] getWeeklyCommitRate(ResponseEntity<String> eventResponse) {
-        boolean[] commitDays = new boolean[7];
-        if (eventResponse.getStatusCode().is2xxSuccessful()) {
-            try {
-                JsonNode events = objectMapper.readTree(eventResponse.getBody());
-                LocalDate today = LocalDate.now();
+    public Mono<boolean[]> getWeeklyCommitRateAsync(String userName)
+    {
+        // 非同期でGitContributeを取得するAPIへ接続
+        //Mono<Map<String,Object>> response = gitHubGraphQLClient.fetchUserContributions(userName);
 
-                for (JsonNode event : events) {
-                    if ("PushEvent".equals(event.get("type").asText())) {
-                        LocalDate commitDate = LocalDate.parse(event.get("created_at").asText().substring(0, 10), DateTimeFormatter.ISO_LOCAL_DATE);
-
-                        // 過去7日間のコミットがあったかどうかをチェック
-                        int daysAgo = (int) ChronoUnit.DAYS.between(commitDate, today);
-                        if (daysAgo >= 0 && daysAgo < 7) {
-                            commitDays[daysAgo] = true; // 該当の日にコミットがあった場合、trueに設定
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else {
-            logger.error("Failed to fetch events: " + eventResponse.getStatusCode());
-        }
-        // 結果をMapに格納
-//        result.put("commitDays", commitDays);
-        return commitDays;
+        // 非同期で結果を処理
+        return gitHubGraphQLClient.fetchUserContributions(userName)
+                .map(result -> processContributions(result)); // 非同期のまま処理
     }
 
-    //概要:1カ月のコミット履歴
-    public boolean[] getMonthlyCommitRate(ResponseEntity<String> eventResponse) {
-        boolean[] monthlyCommitRate = new boolean[30];
-        return monthlyCommitRate;
+    private boolean[] processContributions(Map<String,Object>result)
+    {
+        boolean[] contributionsWeek = new boolean[7];
+        logger.debug("★★★result:"+result);
+        // 今日の日付を取得
+        LocalDate today = LocalDate.now();
+        // 今週の開始日 (日曜日)
+        LocalDate startOfWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));
+        logger.debug("startOfWeek"+startOfWeek);
+
+        Optional<Map<String, Object>> contributionData = Optional.ofNullable(result)
+                .map(d -> (Map<String, Object>) d.get("data"))
+                .map(d -> (Map<String, Object>) d.get("user"))
+                .map(d -> (Map<String, Object>) d.get("contributionsCollection"))
+                .map(d -> (Map<String, Object>) d.get("contributionCalendar"))
+                .map(d -> (List<Map<String, Object>>) d.get("weeks"))
+                .orElse(Collections.emptyList())
+                .stream()
+                .flatMap(week -> Optional.ofNullable((List<Map<String, Object>>) week.get("contributionDays"))
+                        .orElse(Collections.emptyList())
+                        .stream())
+                .filter(day -> startOfWeek.toString().equals(day.get("date")))
+                .findFirst();
+
+        System.out.println(contributionData
+                .map(d -> "今週の開始日 (" + startOfWeek + ") のデータ: " + d)
+                .orElse("今週の開始日 (" + startOfWeek + ") のデータは見つかりませんでした。"));
+
+
+
+//        Map<String,Object> weeks = result.get("contributionWeeks");
+//        if (weeks == null) {
+//            logger.warn("contributionWeeks が null です。空のリストを使用します。");
+//            weeks = Collections.emptyList();
+//        }
+//
+//        for (Map<String, Object> week : weeks) {
+//            List<Map<String, Object>> days = (List<Map<String, Object>>) week.get("contributionDays");
+//
+//            if (days == null) {
+//                logger.warn("contributionDays が null です。スキップします。");
+//                continue;
+//            }
+//
+//            for (Map<String, Object> day : days) {
+//                String dateString = (String) day.get("date");
+//                LocalDate date = LocalDate.parse(dateString); // 文字列を LocalDate に変換
+//                int contributionCount = (int) day.get("contributionCount");
+//
+//                // 今週の範囲内なら `boolean[]` を更新
+//                if (!date.isBefore(startOfWeek) && !date.isAfter(today)) {
+//                    logger.debug("for文内の日付:" + date);
+//                    int index = date.getDayOfWeek().getValue() % 7; // 日曜を 0, 月曜を 1 にする
+//                    contributionsWeek[index] = contributionCount > 0;
+//                }
+//            }
+//        }
+
+        return contributionsWeek;
     }
 
 }
