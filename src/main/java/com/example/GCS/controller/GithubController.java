@@ -101,12 +101,12 @@ public class GithubController {
          * 一週間分のレポジトリ取得(非同期)
          *------------------------------------------------------------*/
         githubService.getWeeklyCommitRateAsync(user.getGitName())
-                .doOnSuccess(contributions -> {
+                .doOnSuccess(contributions -> {                     //成功時
                     logger.debug("★ サービスからの非同期結果: " + Arrays.toString(contributions));
                     responseUserRepositoryDate.put("weeklyCommitRate", contributions);
                 })
                 .doOnError(error -> {
-                    logger.error("★ 非同期処理でエラー発生", error);
+                    logger.error("★ 非同期処理でエラー発生", error);           // 失敗時
                     responseUserRepositoryDate.put("weeklyCommitRate", null);
                 })
                 .doFinally(signal -> {
@@ -114,7 +114,7 @@ public class GithubController {
                     logger.debug("★★★非同期処理終わりセットdata:"+responseUserRepositoryDate);
                     deferredResult.setResult(ResponseEntity.ok(responseUserRepositoryDate));
                 })
-                .subscribe();
+                .subscribe();   //非同期処理を実行（subscribeしないと始まらないっぽい）
 
         /*-------------------------------------------------------------
          * (一番最新の)コミットされたリポジトリを取得

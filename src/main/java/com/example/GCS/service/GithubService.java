@@ -232,7 +232,7 @@ public class GithubService {
         // 非同期でGitContributeを取得するAPIへ接続
         //Mono<Map<String,Object>> response = gitHubGraphQLClient.fetchUserContributions(userName);
 
-        // 非同期で結果を処理
+        // GraphQLClientでAPI接続
         return gitHubGraphQLClient.fetchUserContributions(userName)
                 .map(result -> processContributions(result)); // 非同期のまま処理
     }
