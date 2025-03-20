@@ -7,4 +7,8 @@ public class EnvConfig {
     public static String getGithubToken() {
         return dotenv.get("GITHUB_TOKEN");
     }
+
+    public static String getAllowedOrigins() {
+        return dotenv.get("ALLOWED_ORIGINS");
+    }
 }
