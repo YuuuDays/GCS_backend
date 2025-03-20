@@ -19,6 +19,7 @@ public class GitHubGraphQLClient {
                 .baseUrl("https://api.github.com/graphql")  // GitHub の GraphQL エンドポイント
                 .defaultHeader("Authorization", "Bearer " + githubToken)  // 認証トークン
                 .defaultHeader("Content-Type", "application/json")
+                .defaultHeader("Accept", "application/vnd.github.v4+json") // GitHubの推奨ヘッダー
                 .build();
     }
 
