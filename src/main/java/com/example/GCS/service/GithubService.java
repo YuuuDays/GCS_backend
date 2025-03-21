@@ -88,7 +88,7 @@ public class GithubService {
         try {
             ResponseEntity<String> repoResponse = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
             String responseBody = repoResponse.getBody();
-            logger.debug("★responseBody:" + responseBody);
+//            logger.debug("★responseBody:" + responseBody);
             return responseBody;
         } catch (RestClientException e) {
             logger.error("Error:" + e.getMessage());
@@ -149,38 +149,25 @@ public class GithubService {
      * @return boolean ...今日のコミットが　有る(true)/無し(false)
      */
     public boolean getTodayCommit(JsonNode jsonNode) {
-        Date pushedAt;
-        Date isToday;
-        String formattedDate;
 
-        // 最新の日付を取得
-        String pushedAtStr = jsonNode.get("pushed_at").asText();
-        logger.debug("★レポジトリ単体から取得(UTC):" + pushedAtStr);
         try {
-            // UTCの日付文字列をDateオブジェクトに変換
-            SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-            utcFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-            pushedAt = utcFormat.parse(pushedAtStr);
+            // UTCの日時文字列を取得
+            String pushedAtStr = jsonNode.get("pushed_at").asText();
+            logger.debug("★レポジトリ単体から取得(UTC): " + pushedAtStr);
 
-            // 日本時間にフォーマット
-            SimpleDateFormat jstFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-            jstFormat.setTimeZone(java.util.TimeZone.getTimeZone("Asia/Tokyo"));
-            formattedDate = jstFormat.format(pushedAt);
+            // UTC -> ZonedDateTime (Instantを使用)
+            Instant pushedAtInstant = Instant.parse(pushedAtStr);
+            ZonedDateTime pushedAtJST = pushedAtInstant.atZone(ZoneId.of("Asia/Tokyo"));
 
-            logger.debug("★レポジトリ単体の時間を日本時間へ:" + formattedDate);
+            // 日本時間での「日付」部分を取得
+            LocalDate pushedDateJST = pushedAtJST.toLocalDate();
 
-            // 与えられた日付をLocalDateに変換
-            String datePart = formattedDate.substring(0, 10);
-            String datePartAndFormat = datePart.replace("/", "-");
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            LocalDate inputDate = LocalDate.parse(datePartAndFormat, formatter);
-
-            // 今日の日付を取得
-            LocalDate today = LocalDate.now();
-            logger.debug("★inputDate:★today:" + inputDate + ":" + today);
+            // **日本時間の今日**
+            LocalDate todayJST = LocalDate.now(ZoneId.of("Asia/Tokyo"));
+            logger.debug("★inputDate (JST): " + pushedDateJST + " ★today (JST): " + todayJST);
 
             // 日付を比較
-            return inputDate.equals(today);
+            return pushedDateJST.equals(todayJST);
 
         } catch (Exception e) {
             logger.error("Data format conversion error:" + e.getMessage());

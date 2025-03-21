@@ -78,7 +78,7 @@ public class GitHubGraphQLClient {
                 .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})  // レスポンスを Mono<Map<String, Object>> に変換
                 .doOnNext(response -> {
                     // 正常時にレスポンス内容をログ出力
-                    logger.debug("GitHub API successful response: " + response);
+//                    logger.debug("GitHub API successful response: " + response);
                 });
 
     }
