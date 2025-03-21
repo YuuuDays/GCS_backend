@@ -92,7 +92,7 @@ public class GithubController {
         JsonNode jsonNode = githubService.StringToJSON(response);
 
         if (response.isEmpty() || jsonNode.isEmpty()) {
-            Map<String, Object> responseAPIError = new VerifyResponseBuilder().success(false).addError("データ取得に失敗しました、時間をおいてアクセスを試してください").build();
+            Map<String, Object> responseAPIError = new VerifyResponseBuilder().success(false).addError("レポジトリがありません。最低1つでもレポジトリを作成して当サイトを利用してください").build();
             deferredResult.setResult(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseAPIError));
             return deferredResult;
         }

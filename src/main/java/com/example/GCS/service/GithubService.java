@@ -70,11 +70,10 @@ public class GithubService {
      * 異常の場合　null
      */
     public String fetchGitHubData(String username) {
-//        String githubToken = EnvConfig.getGithubToken();
-        logger.debug("GITHUB_TOKEN:" + githubToken);
+//        logger.debug("GITHUB_TOKEN:" + githubToken);
 
         /*-------------------------------------------------------------
-         *  GitHub API のエンドポイント（リポジトリ一覧取得）ック
+         *  GitHub API のエンドポイント（リポジトリ一覧取得）
          *------------------------------------------------------------*/
         String url = "https://api.github.com/users/" + username + "/repos";
         // HTTP ヘッダー設定
@@ -89,17 +88,13 @@ public class GithubService {
         try {
             ResponseEntity<String> repoResponse = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
             String responseBody = repoResponse.getBody();
-            //logger.debug("★responseBody:" + responseBody);
+            logger.debug("★responseBody:" + responseBody);
             return responseBody;
         } catch (RestClientException e) {
             logger.error("Error:" + e.getMessage());
             return null;
         }
-        // MEMO
-        // リポジトリ内のすべてのAT_TIMEを抜き出しMAP<Stirng,String>にぶちこむ？あるいはString[]
-        // それの最新を取得する。
-        //　取得したら世界時間なので日本時間に直すために+9時間する
-        //
+
     }
 
     // StringからJSONへ
