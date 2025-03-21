@@ -1,12 +1,12 @@
 package com.example.GCS.service;
 
 import com.example.GCS.utils.GitHubGraphQLClient;
-import com.example.GCS.config.EnvConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -35,7 +35,9 @@ public class GithubService {
     private static final Logger logger = LoggerFactory.getLogger(GithubService.class);
     private final ObjectMapper objectMapper;
     private final GitHubGraphQLClient gitHubGraphQLClient;
-    private final String githubToken = EnvConfig.getGithubToken();
+
+    @Value("${GITHUB_TOKEN}")
+    private String githubToken ;
 
     public GithubService(ObjectMapper objectMapper, GitHubGraphQLClient gitHubGraphQLClient) {
         this.objectMapper = objectMapper;
@@ -240,7 +242,7 @@ public class GithubService {
     //概要:一週間のコミット履歴の計算ロジック
     private Boolean[] processContributions(Map<String, Object> result) {
         Boolean[] contributionsWeek = new Boolean[7];
-        logger.debug("★★★result:" + result);
+//        logger.debug("★★★result:" + result);
         // 今日の日付を取得
         LocalDate today = LocalDate.now();
         //テスト用
