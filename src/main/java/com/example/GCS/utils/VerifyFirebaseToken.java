@@ -13,7 +13,11 @@ public class VerifyFirebaseToken {
         this.firebaseAuth = firebaseAuth;
     }
 
-    //概要:フロンエンドのAuthorizationのJWTを検証しuidを返す
+    /**概要:フロンエンドのAuthorizationのJWTを検証しuidを返す
+     *
+     * @param bearerToken   フロントから送られてくるJWT in AuthHeader
+     * @return 検証済みFirebaseToken
+     */
     public FirebaseToken verifyFirebaseToken(String bearerToken)
     {
         try
