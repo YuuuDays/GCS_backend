@@ -109,7 +109,12 @@ public class ValidationChecksService {
         try
         {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-            LocalTime.parse(time, formatter);
+            LocalTime parsed = LocalTime.parse(time, formatter);
+            // 通知は1時間単位(バッチが毎時0分に起動)のため、分は00のみ許可
+            if (parsed.getMinute() != 0)
+            {
+                return ValidationResult.error("time","通知時間は1時間単位(HH:00)で指定してください");
+            }
         }catch (DateTimeParseException e)
         {
             return ValidationResult.error("time","通知時間が不正です");
