@@ -120,9 +120,19 @@ class ValidationChecksServiceTest {
     @Test
     void checkNotificationTime_normal()
     {
-        String time = "23:45";
+        // 通知は1時間単位のため、正常値は"HH:00"
+        String time = "23:00";
         result = validationChecksService.checkNotificationTime(time);
         ValidationResult expected = ValidationResult.success();
+        assertThat(result,equalTo(expected));
+    }
+    @Test
+    void checkNotificationTime_notHourly()
+    {
+        // 分が00以外(旧仕様の15分単位)はエラー
+        String time = "23:45";
+        result = validationChecksService.checkNotificationTime(time);
+        ValidationResult expected = ValidationResult.error("time","通知時間は1時間単位(HH:00)で指定してください");
         assertThat(result,equalTo(expected));
     }
     @Test
