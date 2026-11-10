@@ -22,7 +22,6 @@ public class GitHubGraphQLClient {
     // @Valueアノテーションはコンストラクタより後に読み込まれるため、引数にセット
     public GitHubGraphQLClient(WebClient.Builder webClientBuilder, @Value("${GITHUB_TOKEN}") String githubToken) {
         this.githubToken = githubToken; // ここで直接受け取る
-        logger.debug("★githubToken ="+githubToken);
         this.webClient = webClientBuilder
                 .baseUrl("https://api.github.com/graphql")  // GitHub の GraphQL エンドポイント
                 .defaultHeader("Authorization", "Bearer " + this.githubToken)  // 認証トークン
