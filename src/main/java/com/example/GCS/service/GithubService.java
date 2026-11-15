@@ -30,6 +30,9 @@ public class GithubService {
 
     private static final String GITHUB_EVENTS_API = "https://api.github.com/users/{username}/events";
     private static final String GITHUB_REPOS_API = "https://api.github.com/users/{username}/repos";
+    // 最後にpushされたリポジトリを1件だけ取得する
+    // (デフォルトは名前順・30件のため、31件以上あると最新pushのリポジトリが漏れる)
+    private static final String GITHUB_LATEST_PUSHED_REPO_API = "https://api.github.com/users/%s/repos?sort=pushed&per_page=1";
 
 
     private static final Logger logger = LoggerFactory.getLogger(GithubService.class);
@@ -75,7 +78,7 @@ public class GithubService {
         /*-------------------------------------------------------------
          *  GitHub API のエンドポイント（リポジトリ一覧取得）
          *------------------------------------------------------------*/
-        String url = "https://api.github.com/users/" + username + "/repos";
+        String url = buildLatestPushedRepoUrl(username);
         // HTTP ヘッダー設定
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "token " + githubToken);
@@ -95,6 +98,16 @@ public class GithubService {
             return null;
         }
 
+    }
+
+    /**
+     * 概要 : 最後にpushされたリポジトリを1件取得するURLを組み立てる
+     *
+     * @param username ...ユーザのGitHubName
+     * @return String ...GitHub APIのURL
+     */
+    static String buildLatestPushedRepoUrl(String username) {
+        return String.format(GITHUB_LATEST_PUSHED_REPO_API, username);
     }
 
     // StringからJSONへ
